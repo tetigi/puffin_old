@@ -79,3 +79,34 @@ data Sphere = Sphere { spherePos :: Vector Double, radius :: Double }
 
 instance Intersectable Sphere where
   intersect (Sphere p1 r1) (Sphere p2 r2) = undefined
+
+-- -------------------------------
+-- Plane
+
+data Plane = Plane { planeNorm :: Vector Double, distance :: Double }
+
+instance Intersectable Plane where
+  intersect (Plane n1 d1) (Plane n2 d2) = undefined
+
+-- -------------------------------
+-- Camera
+
+data Camera = Camera { transform :: Matrix Double, near :: Double, far :: Double }
+
+-- -------------------------------
+-- Light
+
+data Light = Light { position :: Vector Double, intensity :: Double }
+
+-- -------------------------------
+-- Scene
+
+data Scene = Scene { time :: Double, spheres :: [Sphere], planes :: [Plane], lights :: [Light] }
+
+getSceneIntersect :: Scene -> Ray -> Intersection
+getSceneIntersect = undefined
+
+type Color = (Double, Double, Double, Double)
+
+trace :: Scene -> Ray -> Double -> Color
+trace = undefined
