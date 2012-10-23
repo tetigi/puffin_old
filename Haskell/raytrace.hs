@@ -12,21 +12,22 @@ lerp a b v  = a * (1.0 - v) + v * b
 
 -- -------------------------------
 -- Vector
--- -------------------------------
 
 newtype Vector a = Vector [a] deriving (Eq, Show)
 instance Num a => Num (Vector a) where
   Vector as + Vector bs = Vector (zipWith (+) as bs)
   Vector as - Vector bs = Vector (zipWith (-) as bs)
-  Vector as * Vector bs = sum $ zipWith (*) as bs
+  Vector as * Vector bs = Vector (zipWith (*) as bs)
   negate (Vector as) = Vector (map negate as)
   fromInteger x = Vector (repeat 0)
   abs m = m
   signum _ = 1
 
+vectorDot :: Vector Double -> Vector Double -> Double
+vectorDot (Vector v1) (Vector v2) = sum $ zipWith (*) v1 v2 
+
 -- -------------------------------
 -- Matrix
--- -------------------------------
 
 newtype Matrix a = Matrix [[a]] deriving (Eq, Show)
 
@@ -60,7 +61,21 @@ transpose as
 
 -- -------------------------------
 -- Ray
+
+data Ray = Ray { origin :: Vector Double, direction :: Vector Double}
+
 -- -------------------------------
+-- Intersection
 
+data Intersection = Intersection { intersectionPos :: Vector Double, normal :: Vector Double, rayParameter :: Double, intersected :: Bool}
 
-data Ray (Vector a) (Vector a) = Pair { origin :: a, direction :: a }
+class Intersectable a where
+  intersect :: a -> a -> Intersection
+
+-- -------------------------------
+-- Sphere
+
+data Sphere = Sphere { spherePos :: Vector Double, radius :: Double }
+
+instance Intersectable Sphere where
+  intersect (Sphere p1 r1) (Sphere p2 r2) = undefined
