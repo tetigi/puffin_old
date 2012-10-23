@@ -1,0 +1,4 @@
+puffin
+======
+
+Miscellaneous code thinkerings
