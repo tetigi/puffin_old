@@ -99,45 +99,45 @@ getColumn i m = getRow i $ matrixTranspose m
 -- -------------------------------
 -- Ray
 
-data Ray a = Ray { origin :: Vector a, direction :: Vector a}
+data Ray = Ray { origin :: Vector Double, direction :: Vector Double}
 
-getRayPosition :: (Num a) => Ray a -> a -> Vector a
+getRayPosition :: Ray -> Double -> Vector Double
 getRayPosition r d = (origin r) + vectorScale (direction r) d
 
 -- -------------------------------
 -- Intersection
 
-data Intersection a = Intersection { intersectionPos :: Vector a, normal :: Vector a, rayParameter :: a, intersected :: Bool}
+data Intersection = Intersection { intersectionPos :: Vector Double, normal :: Vector Double, rayParameter :: Double, intersected :: Bool}
 
 class Intersectable a where
-  intersect :: (Num a) => a -> Ray a -> Intersection a
+  intersect :: a -> Ray -> Intersection
 
 -- -------------------------------
 -- Sphere
 
-data Sphere a = Sphere { spherePos :: Vector a, radius :: a }
+data Sphere = Sphere { spherePos :: Vector Double, radius :: Double }
 
-instance (Num a) => Intersectable (Sphere a) where
+instance Intersectable Sphere where
   intersect s@(Sphere position radius) ray@(Ray origin dir) = undefined
-    --where
-     -- p = position - origin
-      --pDotRayDir = vectorDot p dir
-      --radiusSq = radius * radius
+    where
+      p = position - origin
+      pDotRayDir = vectorDot p dir
+      radiusSq = radius * radius
 
-      --temp = radiusSq + pDotRayDir * pDotRayDir - (vectorDot p p)
+      temp = radiusSq + pDotRayDir * pDotRayDir - (vectorDot p p)
       
-      --rayParameter = pDotRayDir - sqrt temp
+      rayParameter = pDotRayDir - sqrt temp
 
-      --position = getRayPosition ray rayParameter
+      position = getRayPosition ray rayParameter
       
     
 
 -- -------------------------------
 -- Plane
 
-data Plane a = Plane { planeNorm :: Vector a, distance :: a }
+data Plane = Plane { planeNorm :: Vector Double, distance :: Double }
 
-instance (Num a) => Intersectable (Plane a) where
+instance Intersectable Plane where
   intersect (Plane n1 d1) (Ray origin dir) = undefined
 
 -- -------------------------------
@@ -148,17 +148,17 @@ data Camera = Camera { transform :: Matrix Double, near :: Double, far :: Double
 -- -------------------------------
 -- Light
 
-data Light a = Light { position :: Vector a, intensity :: Double }
+data Light = Light { position :: Vector Double, intensity :: Double }
 
 -- -------------------------------
 -- Scene
 
-data Scene a = Scene { time :: Double, spheres :: [Sphere a], planes :: [Plane a], lights :: [Light a] }
+data Scene = Scene { time :: Double, spheres :: [Sphere], planes :: [Plane], lights :: [Light] }
 
-getSceneIntersect :: (Num a) =>  Scene a -> Ray a -> Intersection a
+getSceneIntersect :: Scene -> Ray -> Intersection
 getSceneIntersect = undefined
 
 type Color = (Double, Double, Double, Double)
 
-trace :: (Num a) => Scene a -> Ray a -> Double -> Color
+trace :: Scene -> Ray -> Double -> Color
 trace = undefined
