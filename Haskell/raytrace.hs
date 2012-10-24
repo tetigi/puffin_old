@@ -1,12 +1,12 @@
 import Data.Array
 
-clamp :: Double -> Double -> Double -> Double
+clamp :: (Ord a) => a -> a -> a -> a
 clamp a b v
   | v < a     = a
   | v > b     = b
   | otherwise = v
 
-lerp :: Double -> Double -> Double -> Double
+lerp :: (Num a, Fractional a) => a -> a -> a -> a
 lerp a b v  = a * (1.0 - v) + v * b
 
 
@@ -58,7 +58,7 @@ matrixInvertSimple :: (Num a) => Matrix a -> Matrix a
 matrixInvertSimple a = addColumn invTranslation $ trimTo 3 4 blankTranslation
   where
     oldScale = getRow 3 $ trimTo 3 4 a
-    translation = getColumn 3 a
+    translation = matrixGetTranslate a
     threeTranspose = addColumn translation $ addRow oldScale $ matrixTranspose $ trimTo 3 3 a
     blankTranslation = addColumn (Vector [0,0,0,1]) $ trimTo 3 4 threeTranspose
     invTranslation = matMultVector blankTranslation $ negVector translation
@@ -68,6 +68,16 @@ matrixTranspose (Matrix as) = Matrix (transpose as)
 
 matMultVector :: (Num a) => Matrix a -> Vector a -> Vector a
 matMultVector (Matrix ms) v = Vector [vectorDot v (Vector m) | m <- ms]
+
+matrixId :: Int -> Matrix Double
+matrixId n = Matrix [replicate i 0 ++ [1] ++ replicate (n-i-1) 0 | i <- [0..n-1]]
+
+matrixSetTranslate :: (Num a) => Vector a -> Matrix a -> Matrix a
+matrixSetTranslate v m = addColumn v $ addRow oldScale $ trimTo 3 3 m
+  where oldScale = getRow 3 $ trimTo 3 4 m
+
+matrixGetTranslate :: (Num a) => Matrix a -> Vector a
+matrixGetTranslate = getColumn 3
 
 transpose :: [[a]] -> [[a]]
 transpose as 
@@ -88,13 +98,6 @@ getRow i (Matrix as) = Vector (as !! i)
 
 getColumn :: Int -> Matrix a -> Vector a
 getColumn i m = getRow i $ matrixTranspose m
-
---matrixGetTranslate :: Matrix -> Vector
---matrixGetTranslate a = undefined
-
---matrixSetTranslate :: Matrix -> Vector -> Matrix
---matrixSetTranslate a = undefined
-
 
 -- -------------------------------
 -- Ray
@@ -167,7 +170,29 @@ data Light = Light { position :: Vector Double, intensity :: Double }
 -- -------------------------------
 -- Scene
 
-data Scene = Scene { time :: Double, spheres :: [Sphere], planes :: [Plane], lights :: [Light] }
+data Scene = Scene { time :: Double, spheres :: [Sphere], planes :: [Plane], lights :: [Light], camera :: Camera }
+
+class Sceneable a where
+  setSceneAtTime :: a -> Double -> a
+
+instance Sceneable Scene where
+  setSceneAtTime (Scene _ s p l _) time = 
+    Scene time nSpheres nPlanes nLights nCamera
+    where
+      nTime = clamp 0 10 time
+      a = nTime / 10
+      d = lerp 10 2 a
+      z = lerp 10 5 a
+      h = lerp 1 5 a
+      
+      nSpheres  = [Sphere (Vector [0, 1, 20, 1]) 1
+                  ,Sphere (Vector [-d, 1, 20, 1]) 1
+                  ,Sphere (Vector [d, 1, 20, 1]) 1]
+      nPlanes   = [Plane (Vector [0, 1, 0, 0]) 0]
+      nLights   = [Light (Vector [0, 4, z, 1]) 15]
+     
+      m = matrixSetTranslate (Vector [0, h, 0, 1]) $ matrixId 4
+      nCamera = Camera m 1 50
 
 getSceneIntersect :: Scene -> Ray -> Intersection
 getSceneIntersect = undefined
