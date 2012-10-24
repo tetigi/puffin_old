@@ -118,9 +118,12 @@ class Intersectable a where
 data Sphere = Sphere { spherePos :: Vector Double, radius :: Double }
 
 instance Intersectable Sphere where
-  intersect s@(Sphere position radius) ray@(Ray origin dir) = undefined
+  intersect s@(Sphere spherePos radius) ray@(Ray origin dir) =
+    if temp < 0.0 || rayParameter < 0.0 
+      then Intersection undefined undefined undefined False
+      else Intersection rayPos normal rayParameter True
     where
-      p = position - origin
+      p = spherePos - origin
       pDotRayDir = vectorDot p dir
       radiusSq = radius * radius
 
@@ -128,7 +131,8 @@ instance Intersectable Sphere where
       
       rayParameter = pDotRayDir - sqrt temp
 
-      position = getRayPosition ray rayParameter
+      rayPos = getRayPosition ray rayParameter
+      normal = vectorNormalize (rayPos - spherePos)
       
     
 
@@ -137,8 +141,18 @@ instance Intersectable Sphere where
 
 data Plane = Plane { planeNorm :: Vector Double, distance :: Double }
 
+tolerance = 1e-12
+
 instance Intersectable Plane where
-  intersect (Plane n1 d1) (Ray origin dir) = undefined
+  intersect p@(Plane planeNorm distance) ray@(Ray origin dir) =
+    if (d < tolerance && d > -tolerance) || rayParameter < 0.0
+      then Intersection undefined undefined undefined False
+      else Intersection rayPos planeNorm rayParameter True
+    where
+      d = vectorDot planeNorm dir
+      rayParameter = (distance - vectorDot planeNorm origin) / d
+      rayPos = getRayPosition ray rayParameter
+
 
 -- -------------------------------
 -- Camera
