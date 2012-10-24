@@ -23,11 +23,17 @@ instance Num a => Num (Vector a) where
   abs m = m
   signum _ = 1
 
-vectorDot :: Vector Double -> Vector Double -> Double
+vectorDot :: (Num a) => Vector a -> Vector a -> a
 vectorDot (Vector v1) (Vector v2) = sum $ zipWith (*) v1 v2
+
+vectorScale :: (Num a) => Vector a -> a -> Vector a
+vectorScale (Vector vs) r = Vector (map (r*) vs)
 
 vectorAppend :: Vector a -> a -> Vector a
 vectorAppend (Vector v) x = Vector (v ++ [x])
+
+vectorNormalize :: (Num a, Fractional a) => Vector a -> Vector a
+vectorNormalize (Vector v) = Vector $ map (/ (sum v)) v
 
 -- negates a 4 length vector, graphics styleeeee
 negVector :: (Num a) => Vector a -> Vector a
@@ -48,7 +54,7 @@ instance Num a => Num (Matrix a) where
   abs m = m
   signum _ = 1
 
-matrixInvertSimple :: Matrix Double -> Matrix Double
+matrixInvertSimple :: (Num a) => Matrix a -> Matrix a
 matrixInvertSimple a = addColumn invTranslation $ trimTo 3 4 blankTranslation
   where
     oldScale = getRow 3 $ trimTo 3 4 a
@@ -60,7 +66,7 @@ matrixInvertSimple a = addColumn invTranslation $ trimTo 3 4 blankTranslation
 matrixTranspose :: Matrix a -> Matrix a
 matrixTranspose (Matrix as) = Matrix (transpose as)
 
-matMultVector :: Matrix Double -> Vector Double -> Vector Double
+matMultVector :: (Num a) => Matrix a -> Vector a -> Vector a
 matMultVector (Matrix ms) v = Vector [vectorDot v (Vector m) | m <- ms]
 
 transpose :: [[a]] -> [[a]]
@@ -93,31 +99,46 @@ getColumn i m = getRow i $ matrixTranspose m
 -- -------------------------------
 -- Ray
 
-data Ray = Ray { origin :: Vector Double, direction :: Vector Double}
+data Ray a = Ray { origin :: Vector a, direction :: Vector a}
+
+getRayPosition :: (Num a) => Ray a -> a -> Vector a
+getRayPosition r d = (origin r) + vectorScale (direction r) d
 
 -- -------------------------------
 -- Intersection
 
-data Intersection = Intersection { intersectionPos :: Vector Double, normal :: Vector Double, rayParameter :: Double, intersected :: Bool}
+data Intersection a = Intersection { intersectionPos :: Vector a, normal :: Vector a, rayParameter :: a, intersected :: Bool}
 
 class Intersectable a where
-  intersect :: a -> a -> Intersection
+  intersect :: (Num a) => a -> Ray a -> Intersection a
 
 -- -------------------------------
 -- Sphere
 
-data Sphere = Sphere { spherePos :: Vector Double, radius :: Double }
+data Sphere a = Sphere { spherePos :: Vector a, radius :: a }
 
-instance Intersectable Sphere where
-  intersect (Sphere p1 r1) (Sphere p2 r2) = undefined
+instance (Num a) => Intersectable (Sphere a) where
+  intersect s@(Sphere position radius) ray@(Ray origin dir) = undefined
+    --where
+     -- p = position - origin
+      --pDotRayDir = vectorDot p dir
+      --radiusSq = radius * radius
+
+      --temp = radiusSq + pDotRayDir * pDotRayDir - (vectorDot p p)
+      
+      --rayParameter = pDotRayDir - sqrt temp
+
+      --position = getRayPosition ray rayParameter
+      
+    
 
 -- -------------------------------
 -- Plane
 
-data Plane = Plane { planeNorm :: Vector Double, distance :: Double }
+data Plane a = Plane { planeNorm :: Vector a, distance :: a }
 
-instance Intersectable Plane where
-  intersect (Plane n1 d1) (Plane n2 d2) = undefined
+instance (Num a) => Intersectable (Plane a) where
+  intersect (Plane n1 d1) (Ray origin dir) = undefined
 
 -- -------------------------------
 -- Camera
@@ -127,17 +148,17 @@ data Camera = Camera { transform :: Matrix Double, near :: Double, far :: Double
 -- -------------------------------
 -- Light
 
-data Light = Light { position :: Vector Double, intensity :: Double }
+data Light a = Light { position :: Vector a, intensity :: Double }
 
 -- -------------------------------
 -- Scene
 
-data Scene = Scene { time :: Double, spheres :: [Sphere], planes :: [Plane], lights :: [Light] }
+data Scene a = Scene { time :: Double, spheres :: [Sphere a], planes :: [Plane a], lights :: [Light a] }
 
-getSceneIntersect :: Scene -> Ray -> Intersection
+getSceneIntersect :: (Num a) =>  Scene a -> Ray a -> Intersection a
 getSceneIntersect = undefined
 
 type Color = (Double, Double, Double, Double)
 
-trace :: Scene -> Ray -> Double -> Color
+trace :: (Num a) => Scene a -> Ray a -> Double -> Color
 trace = undefined
