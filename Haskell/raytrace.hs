@@ -1,4 +1,4 @@
-import Data.Array
+import qualified Graphics.GD as GD
 
 clamp :: (Ord a) => a -> a -> a -> a
 clamp a b v
@@ -35,6 +35,9 @@ vectorAppend (Vector v) x = Vector (v ++ [x])
 vectorNormalize :: (Num a, Fractional a) => Vector a -> Vector a
 vectorNormalize (Vector v) = Vector $ map (/ (sum v)) v
 
+vectorSize :: (Floating a) => Vector a -> a
+vectorSize (Vector v) = sqrt . sum $ map (^2) v
+
 -- negates a 4 length vector, graphics styleeeee
 negVector :: (Num a) => Vector a -> Vector a
 negVector (Vector v) = Vector $ (map negate (init v)) ++ [last v]
@@ -68,6 +71,9 @@ matrixTranspose (Matrix as) = Matrix (transpose as)
 
 matMultVector :: (Num a) => Matrix a -> Vector a -> Vector a
 matMultVector (Matrix ms) v = Vector [vectorDot v (Vector m) | m <- ms]
+
+matMultRay :: Matrix Double -> Ray -> Ray
+matMultRay m r = Ray (matMultVector m (origin r)) (matMultVector m (direction r))
 
 matrixId :: Int -> Matrix Double
 matrixId n = Matrix [replicate i 0 ++ [1] ++ replicate (n-i-1) 0 | i <- [0..n-1]]
@@ -177,6 +183,9 @@ data Scene = Scene { time :: Double, spheres :: [Sphere], planes :: [Plane], lig
 
 class Sceneable a where
   setSceneAtTime :: a -> Double -> a
+  getCamera :: a -> Camera
+  getLights :: a -> [Light]
+  getSceneIntersect :: a -> Ray -> Intersection
 
 instance Sceneable Scene where
   setSceneAtTime (Scene _ s p l _) time = 
@@ -197,14 +206,59 @@ instance Sceneable Scene where
       m = matrixSetTranslate (Vector [0, h, 0, 1]) $ matrixId 4
       nCamera = Camera m 1 50
 
-getSceneIntersect :: Scene -> Ray -> Intersection
-getSceneIntersect s r = 
-  minimum $ filter intersected (sphereIntersects ++ planeIntersects)
-  where
-    sphereIntersects = map (intersect r) $ spheres s
-    planeIntersects = map (intersect r) $ planes s
+  getCamera = camera
+
+  getSceneIntersect s r = 
+    minimum $ filter intersected (sphereIntersects ++ planeIntersects)
+    where
+      sphereIntersects = map (intersect r) $ spheres s
+      planeIntersects = map (intersect r) $ planes s
+
+  getLights = lights
 
 type Color = (Double, Double, Double, Double)
+colorToGDColor :: Color -> GD.Color
+colorToGDColor (r, g, b, a) = 
+  GD.rgba (min (floor (255 * r)) 255) (min (floor (255 * g)) 255) (min (floor (255 * b)) 255) (127 - (min (floor (127 * a)) 127))
 
-trace :: Scene -> Ray -> Double -> Color
-trace = undefined
+trace :: (Sceneable a) => a -> Ray -> Double -> Color
+trace s r d =
+  if intersected intersection
+    then foldl1 sumColors $ map (getLightIntersect s intersection) $ getLights s
+    else (0, 0, 0, 0)
+  where
+    sumColors :: Color -> Color -> Color
+    sumColors (r1, g1, b1, _) (r2, g2, b2, _) = (r1 + r2, g1 + g2, b1 + b2, 1)
+
+    intersection = getSceneIntersect s r
+    
+    getLightIntersect :: (Sceneable a) => a -> Intersection -> Light -> Color
+    getLightIntersect s i l =
+      if not $ intersected $ getSceneIntersect s shadowRay
+        then (a, a, a, 1)
+        else (0, 0, 0, 1)
+      where
+        lightDir = position l - intersectionPos i
+        d = vectorSize lightDir
+        attenuation = intensity l / (d * d)
+        lightDirNorm = vectorNormalize lightDir
+
+        shadowRay = Ray ((intersectionPos i) + (vectorScale (normal i) 0.001)) lightDirNorm
+        a = attenuation * max 0 (vectorDot lightDir (normal i))
+
+renderFrame :: (Sceneable a) => a -> Integer -> IO ()
+renderFrame initScene i =
+  do
+    img <- GD.newImage (256, 256)
+    GD.fillImage (GD.rgb 0 0 0) img
+    pixels <- return [ (x, 256 -1 -y, trace scene (matMultRay (transform cam) (Ray baseVector (Vector [x * pixelWidth - 0.5, y * pixelHeight - 0.5, 1, 0]))) 0) | x <- [0..255], y <- [0..255]]
+    sequence_ $ map (\(x, y, c) -> GD.setPixel (floor x, floor y) (colorToGDColor c) img) pixels
+    GD.savePngFile ("img" ++ show i ++ ".png") img
+  where
+    scene = setSceneAtTime initScene (fromInteger i)
+    cam = getCamera scene
+    pixelWidth = 1.0/256
+    pixelHeight = 1.0/256
+    baseVector = Vector [0, 0, 0, 1]
+
+--TODO Change accessors to gets
