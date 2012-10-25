@@ -182,13 +182,13 @@ data Light = Light { position :: Vector Double, intensity :: Double }
 data Scene = Scene { time :: Double, spheres :: [Sphere], planes :: [Plane], lights :: [Light], camera :: Camera }
 
 class Sceneable a where
-  setSceneAtTime :: a -> Double -> a
+  setSceneAtTime :: Double -> a
   getCamera :: a -> Camera
   getLights :: a -> [Light]
   getSceneIntersect :: a -> Ray -> Intersection
 
 instance Sceneable Scene where
-  setSceneAtTime (Scene _ s p l _) time = 
+  setSceneAtTime time = 
     Scene time nSpheres nPlanes nLights nCamera
     where
       nTime = clamp 0 10 time
@@ -209,10 +209,13 @@ instance Sceneable Scene where
   getCamera = camera
 
   getSceneIntersect s r = 
-    minimum $ filter intersected (sphereIntersects ++ planeIntersects)
+    if length successful > 0
+      then minimum successful
+      else Intersection undefined undefined undefined False
     where
       sphereIntersects = map (intersect r) $ spheres s
       planeIntersects = map (intersect r) $ planes s
+      successful = filter intersected (sphereIntersects ++ planeIntersects)
 
   getLights = lights
 
@@ -246,8 +249,8 @@ trace s r d =
         shadowRay = Ray ((intersectionPos i) + (vectorScale (normal i) 0.001)) lightDirNorm
         a = attenuation * max 0 (vectorDot lightDir (normal i))
 
-renderFrame :: (Sceneable a) => a -> Integer -> IO ()
-renderFrame initScene i =
+renderFrame :: Integer -> IO ()
+renderFrame i =
   do
     img <- GD.newImage (256, 256)
     GD.fillImage (GD.rgb 0 0 0) img
@@ -255,7 +258,8 @@ renderFrame initScene i =
     sequence_ $ map (\(x, y, c) -> GD.setPixel (floor x, floor y) (colorToGDColor c) img) pixels
     GD.savePngFile ("img" ++ show i ++ ".png") img
   where
-    scene = setSceneAtTime initScene (fromInteger i)
+    scene :: Scene
+    scene = setSceneAtTime (fromInteger i)
     cam = getCamera scene
     pixelWidth = 1.0/256
     pixelHeight = 1.0/256
