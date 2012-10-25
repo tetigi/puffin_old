@@ -110,10 +110,13 @@ getRayPosition r d = (origin r) + vectorScale (direction r) d
 -- -------------------------------
 -- Intersection
 
-data Intersection = Intersection { intersectionPos :: Vector Double, normal :: Vector Double, rayParameter :: Double, intersected :: Bool}
+data Intersection = Intersection { intersectionPos :: Vector Double, normal :: Vector Double, rayParameter :: Double, intersected :: Bool} deriving Eq
 
 class Intersectable a where
-  intersect :: a -> Ray -> Intersection
+  intersect :: Ray -> a -> Intersection
+
+instance Ord Intersection where
+  compare i1 i2 = compare (rayParameter i1) (rayParameter i2)
 
 -- -------------------------------
 -- Sphere
@@ -121,7 +124,7 @@ class Intersectable a where
 data Sphere = Sphere { spherePos :: Vector Double, radius :: Double }
 
 instance Intersectable Sphere where
-  intersect s@(Sphere spherePos radius) ray@(Ray origin dir) =
+  intersect ray@(Ray origin dir) s@(Sphere spherePos radius) =
     if temp < 0.0 || rayParameter < 0.0 
       then Intersection undefined undefined undefined False
       else Intersection rayPos normal rayParameter True
@@ -147,7 +150,7 @@ data Plane = Plane { planeNorm :: Vector Double, distance :: Double }
 tolerance = 1e-12
 
 instance Intersectable Plane where
-  intersect p@(Plane planeNorm distance) ray@(Ray origin dir) =
+  intersect  ray@(Ray origin dir) p@(Plane planeNorm distance) =
     if (d < tolerance && d > -tolerance) || rayParameter < 0.0
       then Intersection undefined undefined undefined False
       else Intersection rayPos planeNorm rayParameter True
@@ -195,7 +198,11 @@ instance Sceneable Scene where
       nCamera = Camera m 1 50
 
 getSceneIntersect :: Scene -> Ray -> Intersection
-getSceneIntersect = undefined
+getSceneIntersect s r = 
+  minimum $ filter intersected (sphereIntersects ++ planeIntersects)
+  where
+    sphereIntersects = map (intersect r) $ spheres s
+    planeIntersects = map (intersect r) $ planes s
 
 type Color = (Double, Double, Double, Double)
 
