@@ -75,7 +75,7 @@ matMultVector :: (Num a) => Matrix a -> Vector a -> Vector a
 matMultVector (Matrix ms) v = Vector [vectorDot v (Vector m) | m <- ms]
 
 matMultRay :: Matrix Double -> Ray -> Ray
-matMultRay m r = Ray (matMultVector m (origin r)) (matMultVector m (direction r))
+matMultRay m r = Ray (matMultVector m (rayOrigin r)) (matMultVector m (rayDirection r))
 
 matrixId :: Int -> Matrix Double
 matrixId n = Matrix [replicate i 0 ++ [1] ++ replicate (n-i-1) 0 | i <- [0..n-1]]
@@ -110,78 +110,78 @@ getColumn i m = getRow i $ matrixTranspose m
 -- -------------------------------
 -- Ray
 
-data Ray = Ray { origin :: Vector Double, direction :: Vector Double}
+data Ray = Ray { rayOrigin :: Vector Double, rayDirection :: Vector Double}
 
 getRayPosition :: Ray -> Double -> Vector Double
-getRayPosition r d = (origin r) + vectorScale (direction r) d
+getRayPosition r d = (rayOrigin r) + vectorScale (rayDirection r) d
 
 -- -------------------------------
 -- Intersection
 
-data Intersection = Intersection { intersectionPos :: Vector Double, normal :: Vector Double, rayParameter :: Double, intersected :: Bool} deriving Eq
+data Intersection = Intersection { intersectionPosition :: Vector Double, intersectionNormal :: Vector Double, intersectionRayParameter :: Double, intersectionIntersected :: Bool} deriving Eq
 
 class Intersectable a where
   intersect :: Ray -> a -> Intersection
 
 instance Ord Intersection where
-  compare i1 i2 = compare (rayParameter i1) (rayParameter i2)
+  compare i1 i2 = compare (intersectionRayParameter i1) (intersectionRayParameter i2)
 
 -- -------------------------------
 -- Sphere
 
-data Sphere = Sphere { spherePos :: Vector Double, radius :: Double }
+data Sphere = Sphere { spherePosition :: Vector Double, sphereRadius :: Double }
 
 instance Intersectable Sphere where
-  intersect ray@(Ray origin dir) s@(Sphere spherePos radius) =
-    if temp < 0.0 || rayParameter < 0.0 
+  intersect ray@(Ray rayOrigin dir) s@(Sphere spherePosition sphereRadius) =
+    if temp < 0.0 || intersectionRayParameter < 0.0 
       then Intersection undefined undefined undefined False
-      else Intersection rayPos normal rayParameter True
+      else Intersection rayPos intersectionNormal intersectionRayParameter True
     where
-      p = spherePos - origin
+      p = spherePosition - rayOrigin
       pDotRayDir = vectorDot p dir
-      radiusSq = radius * radius
+      radiusSq = sphereRadius * sphereRadius
 
       temp = radiusSq + pDotRayDir * pDotRayDir - (vectorDot p p)
       
-      rayParameter = pDotRayDir - sqrt temp
+      intersectionRayParameter = pDotRayDir - sqrt temp
 
-      rayPos = getRayPosition ray rayParameter
-      normal = vectorNormalize (rayPos - spherePos)
+      rayPos = getRayPosition ray intersectionRayParameter
+      intersectionNormal = vectorNormalize (rayPos - spherePosition)
       
     
 
 -- -------------------------------
 -- Plane
 
-data Plane = Plane { planeNorm :: Vector Double, distance :: Double }
+data Plane = Plane { planeNormal :: Vector Double, planeDistance :: Double }
 
 tolerance = 1e-12
 
 instance Intersectable Plane where
-  intersect  ray@(Ray origin dir) p@(Plane planeNorm distance) =
-    if (d < tolerance && d > -tolerance) || rayParameter < 0.0
+  intersect  ray@(Ray rayOrigin dir) p@(Plane planeNormal planeDistance) =
+    if (d < tolerance && d > -tolerance) || intersectionRayParameter < 0.0
       then Intersection undefined undefined undefined False
-      else Intersection rayPos planeNorm rayParameter True
+      else Intersection rayPos planeNormal intersectionRayParameter True
     where
-      d = vectorDot planeNorm dir
-      rayParameter = (distance - vectorDot planeNorm origin) / d
-      rayPos = getRayPosition ray rayParameter
+      d = vectorDot planeNormal dir
+      intersectionRayParameter = (planeDistance - vectorDot planeNormal rayOrigin) / d
+      rayPos = getRayPosition ray intersectionRayParameter
 
 
 -- -------------------------------
 -- Camera
 
-data Camera = Camera { transform :: Matrix Double, near :: Double, far :: Double }
+data Camera = Camera { cameraTransform :: Matrix Double, cameraNear :: Double, cameraFar :: Double }
 
 -- -------------------------------
 -- Light
 
-data Light = Light { position :: Vector Double, intensity :: Double }
+data Light = Light { lightPosition :: Vector Double, lightIntensity :: Double }
 
 -- -------------------------------
 -- Scene
 
-data Scene = Scene { time :: Double, spheres :: [Sphere], planes :: [Plane], lights :: [Light], camera :: Camera }
+data Scene = Scene { sceneTime :: Double, sceneSpheres :: [Sphere], scenePlanes :: [Plane], sceneLights :: [Light], sceneCamera :: Camera }
 
 class Sceneable a where
   setSceneAtTime :: Double -> a
@@ -190,10 +190,10 @@ class Sceneable a where
   getSceneIntersect :: a -> Ray -> Intersection
 
 instance Sceneable Scene where
-  setSceneAtTime time = 
-    Scene time nSpheres nPlanes nLights nCamera
+  setSceneAtTime sceneTime = 
+    Scene sceneTime nSpheres nPlanes nLights nCamera
     where
-      nTime = clamp 0 10 time
+      nTime = clamp 0 10 sceneTime
       a = nTime / 10
       d = lerp 10 2 a
       z = lerp 10 5 a
@@ -208,18 +208,18 @@ instance Sceneable Scene where
       m = matrixSetTranslate (Vector [0, h, 0, 1]) $ matrixId 4
       nCamera = Camera m 1 50
 
-  getCamera = camera
+  getCamera = sceneCamera
 
   getSceneIntersect s r = 
     if length successful > 0
       then minimum successful
       else Intersection undefined undefined undefined False
     where
-      sphereIntersects = map (intersect r) $ spheres s
-      planeIntersects = map (intersect r) $ planes s
-      successful = filter intersected (sphereIntersects ++ planeIntersects)
+      sphereIntersects = map (intersect r) $ sceneSpheres s
+      planeIntersects = map (intersect r) $ scenePlanes s
+      successful = filter intersectionIntersected (sphereIntersects ++ planeIntersects)
 
-  getLights = lights
+  getLights = sceneLights
 
 type Color = (Double, Double, Double, Double)
 colorToGDColor :: Color -> GD.Color
@@ -228,7 +228,7 @@ colorToGDColor (r, g, b, a) =
 
 trace :: (Sceneable a) => a -> Ray -> Double -> Color
 trace s r d =
-  if intersected intersection
+  if intersectionIntersected intersection
     then foldl1 sumColors $ map (getLightIntersect s intersection) $ getLights s
     else (0, 0, 0, 0)
   where
@@ -239,24 +239,24 @@ trace s r d =
     
     getLightIntersect :: (Sceneable a) => a -> Intersection -> Light -> Color
     getLightIntersect s i l =
-      if not $ intersected $ getSceneIntersect s shadowRay
+      if not $ intersectionIntersected $ getSceneIntersect s shadowRay
         then (a, a, a, 1)
         else (0, 0, 0, 1)
       where
-        lightDir = position l - intersectionPos i
+        lightDir = lightPosition l - intersectionPosition i
         d = vectorSize lightDir
-        attenuation = intensity l / (d * d)
+        attenuation = lightIntensity l / (d * d)
         lightDirNorm = vectorNormalize lightDir
 
-        shadowRay = Ray ((intersectionPos i) + (vectorScale (normal i) 0.001)) lightDirNorm
-        a = attenuation * max 0 (vectorDot lightDir (normal i))
+        shadowRay = Ray ((intersectionPosition i) + (vectorScale (intersectionNormal i) 0.001)) lightDirNorm
+        a = attenuation * max 0 (vectorDot lightDir (intersectionNormal i))
 
 renderFrame :: Integer -> IO ()
 renderFrame i =
   do
     img <- GD.newImage (256, 256)
     GD.fillImage (GD.rgb 0 0 0) img
-    pixels <- return [ (x, 256 -1 -y, trace scene (matMultRay (transform cam) (Ray baseVector (Vector [x * pixelWidth - 0.5, y * pixelHeight - 0.5, 1, 0]))) 0) | x <- [0..255], y <- [0..255]]
+    pixels <- return [ (x, 256 -1 -y, trace scene (matMultRay (cameraTransform cam) (Ray baseVector (Vector [x * pixelWidth - 0.5, y * pixelHeight - 0.5, 1, 0]))) 0) | x <- [0..255], y <- [0..255]]
     sequence_ $ map (\(x, y, c) -> GD.setPixel (floor x, floor y) (colorToGDColor c) img) pixels
     GD.savePngFile ("img" ++ show i ++ ".png") img
   where
