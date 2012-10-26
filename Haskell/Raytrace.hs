@@ -34,8 +34,8 @@ vectorScale (Vector vs) r = Vector (map (r*) vs)
 vectorAppend :: Vector a -> a -> Vector a
 vectorAppend (Vector v) x = Vector (v ++ [x])
 
-vectorNormalize :: (Num a, Fractional a) => Vector a -> Vector a
-vectorNormalize (Vector v) = Vector $ map (/ (sum v)) v
+vectorNormalize :: (Num a, Fractional a, Floating a) => Vector a -> Vector a
+vectorNormalize v@(Vector vs) = Vector $ map (/ (vectorSize v)) vs
 
 vectorSize :: (Floating a) => Vector a -> a
 vectorSize (Vector v) = sqrt . sum $ map (^2) v
@@ -59,15 +59,6 @@ instance Num a => Num (Matrix a) where
   abs m = m
   signum _ = 1
 
-{-matrixInvertSimple :: (Num a) => Matrix a -> Matrix a
-matrixInvertSimple a = matrixAddColumn invTranslation $ matrixTrimTo 3 4 blankTranslation
-  where
-    oldScale = matrixGetRow 3 $ matrixTrimTo 3 4 a
-    translation = matrixGetTranslate a
-    threeTranspose = matrixAddColumn translation $ matrixAddRow oldScale $ matrixTranspose $ matrixTrimTo 3 3 a
-    blankTranslation = matrixAddColumn (Vector [0,0,0,1]) $ matrixTrimTo 3 4 threeTranspose
-    invTranslation = matMultVector blankTranslation $ negVector translation
--}
 matrixTranspose :: Matrix a -> Matrix a
 matrixTranspose (Matrix as) = Matrix (transpose as)
 

@@ -14,22 +14,30 @@ prop_lerp = undefined
 instance (Arbitrary a, Num a) => Arbitrary (Vector a) where
   arbitrary = fmap Vector $ vectorOf 4 arbitrary
 
-prop_vectorDot = undefined
-prop_vectorScale = undefined
-prop_vectorAppend = undefined
-prop_vectorNormalize = undefined
-prop_vectorSize = undefined
-prop_negVector = undefined
+prop_vectorDot v1 v2 = 
+  vectorDot v1 v2 == vectorDot v2 v1 &&
+  vectorDot v1 (v1 + v2) == vectorDot v1 v1 + vectorDot v1 v2 
 
-test_Vector :: (Num a, Eq a) => [(Vector a -> Bool)]
-test_Vector = [ prop_vectorDot
-              , prop_vectorScale
-              , prop_vectorAppend
-              , prop_vectorNormalize
-              , prop_vectorSize
-              , prop_negVector
+prop_vectorAppend v@(Vector vs) n =
+  (\(Vector v') -> length v') (vectorAppend v n) == length vs + 1
+
+isZero :: (Num a, Eq a) => Vector a -> Bool
+isZero (Vector vs) = and $ map (==0) vs
+
+prop_vectorNormalize v =
+  not (isZero v) ==> vectorSize (vectorNormalize v) == 1
+
+prop_negVector v@(Vector vs) = 
+  negVector (negVector v) == v 
+
+{-
+test_Vector = [ quickCheck prop_vectorDot
+              , quickCheck prop_vectorScale
+              , quickCheck prop_vectorAppend
+              , quickCheck prop_vectorNormalize
+              , quickCheck prop_negVector
               ]
-
+              -}
 -- --------------------------
 -- Matrix
 
