@@ -1,3 +1,5 @@
+module Raytrace where
+
 import qualified Graphics.GD as GD
 
 clamp :: (Ord a) => a -> a -> a -> a
@@ -57,7 +59,7 @@ instance Num a => Num (Matrix a) where
   abs m = m
   signum _ = 1
 
-matrixInvertSimple :: (Num a) => Matrix a -> Matrix a
+{-matrixInvertSimple :: (Num a) => Matrix a -> Matrix a
 matrixInvertSimple a = addColumn invTranslation $ trimTo 3 4 blankTranslation
   where
     oldScale = getRow 3 $ trimTo 3 4 a
@@ -65,7 +67,7 @@ matrixInvertSimple a = addColumn invTranslation $ trimTo 3 4 blankTranslation
     threeTranspose = addColumn translation $ addRow oldScale $ matrixTranspose $ trimTo 3 3 a
     blankTranslation = addColumn (Vector [0,0,0,1]) $ trimTo 3 4 threeTranspose
     invTranslation = matMultVector blankTranslation $ negVector translation
-
+-}
 matrixTranspose :: Matrix a -> Matrix a
 matrixTranspose (Matrix as) = Matrix (transpose as)
 
