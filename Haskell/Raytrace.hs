@@ -1,6 +1,6 @@
 module Raytrace where
-
 import qualified Graphics.GD as GD
+import Data.List (transpose)
 
 clamp :: (Ord a) => a -> a -> a -> a
 clamp a b v
@@ -60,12 +60,12 @@ instance Num a => Num (Matrix a) where
   signum _ = 1
 
 {-matrixInvertSimple :: (Num a) => Matrix a -> Matrix a
-matrixInvertSimple a = addColumn invTranslation $ trimTo 3 4 blankTranslation
+matrixInvertSimple a = matrixAddColumn invTranslation $ matrixTrimTo 3 4 blankTranslation
   where
-    oldScale = getRow 3 $ trimTo 3 4 a
+    oldScale = matrixGetRow 3 $ matrixTrimTo 3 4 a
     translation = matrixGetTranslate a
-    threeTranspose = addColumn translation $ addRow oldScale $ matrixTranspose $ trimTo 3 3 a
-    blankTranslation = addColumn (Vector [0,0,0,1]) $ trimTo 3 4 threeTranspose
+    threeTranspose = matrixAddColumn translation $ matrixAddRow oldScale $ matrixTranspose $ matrixTrimTo 3 3 a
+    blankTranslation = matrixAddColumn (Vector [0,0,0,1]) $ matrixTrimTo 3 4 threeTranspose
     invTranslation = matMultVector blankTranslation $ negVector translation
 -}
 matrixTranspose :: Matrix a -> Matrix a
@@ -81,31 +81,26 @@ matrixId :: Int -> Matrix Double
 matrixId n = Matrix [replicate i 0 ++ [1] ++ replicate (n-i-1) 0 | i <- [0..n-1]]
 
 matrixSetTranslate :: (Num a) => Vector a -> Matrix a -> Matrix a
-matrixSetTranslate v m = addColumn v $ addRow oldScale $ trimTo 3 3 m
-  where oldScale = getRow 3 $ trimTo 3 4 m
+matrixSetTranslate v m = matrixAddColumn v $ matrixAddRow oldScale $ matrixTrimTo 3 3 m
+  where oldScale = matrixGetRow 3 $ matrixTrimTo 3 4 m
 
 matrixGetTranslate :: (Num a) => Matrix a -> Vector a
-matrixGetTranslate = getColumn 3
+matrixGetTranslate = matrixGetColumn 3
 
-transpose :: [[a]] -> [[a]]
-transpose as 
-  | (length . head) as == 0 = []
-  | otherwise     = (map head as) : (transpose (map tail as))
+matrixTrimTo :: Int -> Int -> Matrix a -> Matrix a
+matrixTrimTo x y (Matrix as) = Matrix $ map (take x) $ take y as 
 
-trimTo :: Int -> Int -> Matrix a -> Matrix a
-trimTo x y (Matrix as) = Matrix $ map (take x) $ take y as 
+matrixAddRow :: Vector a -> Matrix a -> Matrix a
+matrixAddRow (Vector v) (Matrix as) = Matrix (as ++ [v])
 
-addRow :: Vector a -> Matrix a -> Matrix a
-addRow (Vector v) (Matrix as) = Matrix (as ++ [v])
+matrixAddColumn :: Vector a -> Matrix a -> Matrix a
+matrixAddColumn v m = matrixTranspose $ matrixAddRow v $ matrixTranspose m
 
-addColumn :: Vector a -> Matrix a -> Matrix a
-addColumn v m = matrixTranspose $ addRow v $ matrixTranspose m
+matrixGetRow :: Int -> Matrix a -> Vector a
+matrixGetRow i (Matrix as) = Vector (as !! i)
 
-getRow :: Int -> Matrix a -> Vector a
-getRow i (Matrix as) = Vector (as !! i)
-
-getColumn :: Int -> Matrix a -> Vector a
-getColumn i m = getRow i $ matrixTranspose m
+matrixGetColumn :: Int -> Matrix a -> Vector a
+matrixGetColumn i m = matrixGetRow i $ matrixTranspose m
 
 -- -------------------------------
 -- Ray
@@ -198,13 +193,17 @@ instance Sceneable Scene where
       d = lerp 10 2 a
       z = lerp 10 5 a
       h = lerp 1 5 a
-      
+     
+      {-
       nSpheres  = [Sphere (Vector [0, 1, 20, 1]) 1
                   ,Sphere (Vector [-d, 1, 20, 1]) 1
                   ,Sphere (Vector [d, 1, 20, 1]) 1]
       nPlanes   = [Plane (Vector [0, 1, 0, 0]) 0]
       nLights   = [Light (Vector [0, 4, z, 1]) 15]
-     
+      -}
+      nSpheres = []
+      nLights = [Light (Vector [0,4,z,1]) 15]
+      nPlanes = [Plane (Vector [0,1,0,0]) 0]
       m = matrixSetTranslate (Vector [0, h, 0, 1]) $ matrixId 4
       nCamera = Camera m 1 50
 
@@ -255,7 +254,7 @@ renderFrame :: Integer -> IO ()
 renderFrame i =
   do
     img <- GD.newImage (256, 256)
-    GD.fillImage (GD.rgb 0 0 0) img
+    GD.fillImage (GD.rgba 0 0 0 0) img
     pixels <- return [ (x, 256 -1 -y, trace scene (matMultRay (cameraTransform cam) (Ray baseVector (Vector [x * pixelWidth - 0.5, y * pixelHeight - 0.5, 1, 0]))) 0) | x <- [0..255], y <- [0..255]]
     sequence_ $ map (\(x, y, c) -> GD.setPixel (floor x, floor y) (colorToGDColor c) img) pixels
     GD.savePngFile ("img" ++ show i ++ ".png") img
@@ -267,4 +266,3 @@ renderFrame i =
     pixelHeight = 1.0/256
     baseVector = Vector [0, 0, 0, 1]
 
---TODO Change accessors to gets
