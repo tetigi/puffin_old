@@ -103,6 +103,7 @@ matrixGetColumn i m = matrixGetRow i $ matrixTranspose m
 -- Ray
 
 data Ray = Ray { rayOrigin :: Vector Double, rayDirection :: Vector Double}
+  deriving (Eq, Show)
 
 getRayPosition :: Ray -> Double -> Vector Double
 getRayPosition r d = (rayOrigin r) + vectorScale (rayDirection r) d
@@ -133,7 +134,7 @@ instance Intersectable Sphere where
       pDotRayDir = vectorDot p dir
       radiusSq = sphereRadius * sphereRadius
 
-      temp = radiusSq + pDotRayDir * pDotRayDir - (vectorDot p p)
+      temp = radiusSq + (pDotRayDir * pDotRayDir) - (vectorDot p p)
       
       intersectionRayParameter = pDotRayDir - sqrt temp
 
@@ -186,22 +187,22 @@ instance Sceneable Scene where
     Scene sceneTime nSpheres nPlanes nLights nCamera
     where
       nTime = clamp 0 10 sceneTime
-      a = nTime / 10
-      d = lerp 10 2 a
-      z = lerp 10 5 a
-      h = lerp 1 5 a
+      a = nTime / 10.0
+      d = lerp 10.0 2.0 a
+      z = lerp 10.0 20.0 a
+      h = lerp 1.0 5.0 a
      
-      {-
+      
       nSpheres  = [Sphere (Vector [0, 1, 20, 1]) 1
                   ,Sphere (Vector [-d, 1, 20, 1]) 1
                   ,Sphere (Vector [d, 1, 20, 1]) 1]
       nPlanes   = [Plane (Vector [0, 1, 0, 0]) 0]
       nLights   = [Light (Vector [0, 4, z, 1]) 15]
-      -}
-      nSpheres = []
-      nLights = [Light (Vector [0,4,z,1]) 15]
-      nPlanes = [Plane (Vector [0,1,0,0]) 0]
-      m = matrixSetTranslate (Vector [0, h, 0, 1]) $ matrixId 4
+      
+      --nSpheres = []
+      --nLights = [Light (Vector [0,4,z,1]) 15]
+      --nPlanes = [Plane (Vector [0,1,0,0]) 0]
+      m = matrixSetTranslate (Vector [0, h, 0, 1.0]) $ matrixId 4
       nCamera = Camera m 1 50
 
   getCamera = sceneCamera
@@ -244,8 +245,8 @@ trace s r d =
         attenuation = lightIntensity l / (d * d)
         lightDirNorm = vectorNormalize lightDir
 
-        shadowRay = Ray ((intersectionPosition i) + (vectorScale (intersectionNormal i) 0.001)) lightDirNorm
-        a = attenuation * max 0 (vectorDot lightDir (intersectionNormal i))
+        shadowRay = Ray ((intersectionPosition i) + (vectorScale (intersectionNormal i) 0.0001)) lightDirNorm
+        a = attenuation * max 0 (vectorDot lightDirNorm (intersectionNormal i))
 
 renderFrame :: Integer -> IO ()
 renderFrame i =
