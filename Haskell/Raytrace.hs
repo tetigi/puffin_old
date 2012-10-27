@@ -105,6 +105,9 @@ matrixGetColumn i m = matrixGetRow i $ matrixTranspose m
 data Ray = Ray { rayOrigin :: Vector Double, rayDirection :: Vector Double}
   deriving (Eq, Show)
 
+initRay :: Vector Double -> Vector Double -> Ray
+initRay origin direction = Ray origin (vectorNormalize direction)
+
 getRayPosition :: Ray -> Double -> Vector Double
 getRayPosition r d = (rayOrigin r) + vectorScale (rayDirection r) d
 
@@ -125,21 +128,21 @@ instance Ord Intersection where
 data Sphere = Sphere { spherePosition :: Vector Double, sphereRadius :: Double }
 
 instance Intersectable Sphere where
-  intersect ray@(Ray rayOrigin dir) s@(Sphere spherePosition sphereRadius) =
+  intersect ray@(Ray origin direction) s@(Sphere position radius) =
     if temp < 0.0 || intersectionRayParameter < 0.0 
       then Intersection undefined undefined undefined False
       else Intersection rayPos intersectionNormal intersectionRayParameter True
     where
-      p = spherePosition - rayOrigin
-      pDotRayDir = vectorDot p dir
-      radiusSq = sphereRadius * sphereRadius
+      p = position - origin
+      pDotRayDir = vectorDot p direction
+      radiusSq = radius * radius
 
       temp = radiusSq + (pDotRayDir * pDotRayDir) - (vectorDot p p)
       
       intersectionRayParameter = pDotRayDir - sqrt temp
 
       rayPos = getRayPosition ray intersectionRayParameter
-      intersectionNormal = vectorNormalize (rayPos - spherePosition)
+      intersectionNormal = vectorNormalize (rayPos - position)
       
     
 
@@ -245,15 +248,15 @@ trace s r d =
         attenuation = lightIntensity l / (d * d)
         lightDirNorm = vectorNormalize lightDir
 
-        shadowRay = Ray ((intersectionPosition i) + (vectorScale (intersectionNormal i) 0.0001)) lightDirNorm
+        shadowRay = initRay ((intersectionPosition i) + (vectorScale (intersectionNormal i) 0.0001)) lightDirNorm
         a = attenuation * max 0 (vectorDot lightDirNorm (intersectionNormal i))
 
 renderFrame :: Integer -> IO ()
 renderFrame i =
   do
     img <- GD.newImage (256, 256)
-    GD.fillImage (GD.rgba 0 0 0 0) img
-    pixels <- return [ (x, 256 -1 -y, trace scene (matrixMultRay (cameraTransform cam) (Ray baseVector (Vector [x * pixelWidth - 0.5, y * pixelHeight - 0.5, 1, 0]))) 0) | x <- [0..255], y <- [0..255]]
+    GD.fillImage (GD.rgba 255 255 255 20) img
+    pixels <- return [ (x, 256 -1 -y, trace scene (matrixMultRay (cameraTransform cam) (initRay baseVector (Vector [(x * pixelWidth) - 0.5, (y * pixelHeight) - 0.5, 1, 0]))) 0) | x <- [0..255], y <- [0..255]]
     sequence_ $ map (\(x, y, c) -> GD.setPixel (floor x, floor y) (colorToGDColor c) img) pixels
     GD.savePngFile ("img" ++ show i ++ ".png") img
   where
