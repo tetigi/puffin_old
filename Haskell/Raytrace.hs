@@ -59,14 +59,20 @@ instance Num a => Num (Matrix a) where
   abs m = m
   signum _ = 1
 
+matrixFromVector :: Vector a -> Matrix a
+matrixFromVector (Vector v) = Matrix [[m] | m <- v]
+
+matrixToVector :: Matrix a -> Vector a
+matrixToVector (Matrix ms) = Vector (map head ms)
+
 matrixTranspose :: Matrix a -> Matrix a
 matrixTranspose (Matrix as) = Matrix (transpose as)
 
-matMultVector :: (Num a) => Matrix a -> Vector a -> Vector a
-matMultVector (Matrix ms) v = Vector [vectorDot v (Vector m) | m <- ms]
+matrixMultVector :: (Num a) => Matrix a -> Vector a -> Vector a
+matrixMultVector m v = matrixToVector $ m * (matrixFromVector v)
 
-matMultRay :: Matrix Double -> Ray -> Ray
-matMultRay m r = Ray (matMultVector m (rayOrigin r)) (matMultVector m (rayDirection r))
+matrixMultRay :: Matrix Double -> Ray -> Ray
+matrixMultRay m r = Ray (matrixMultVector m (rayOrigin r)) (matrixMultVector m (rayDirection r))
 
 matrixId :: Int -> Matrix Double
 matrixId n = Matrix [replicate i 0 ++ [1] ++ replicate (n-i-1) 0 | i <- [0..n-1]]
@@ -246,7 +252,7 @@ renderFrame i =
   do
     img <- GD.newImage (256, 256)
     GD.fillImage (GD.rgba 0 0 0 0) img
-    pixels <- return [ (x, 256 -1 -y, trace scene (matMultRay (cameraTransform cam) (Ray baseVector (Vector [x * pixelWidth - 0.5, y * pixelHeight - 0.5, 1, 0]))) 0) | x <- [0..255], y <- [0..255]]
+    pixels <- return [ (x, 256 -1 -y, trace scene (matrixMultRay (cameraTransform cam) (Ray baseVector (Vector [x * pixelWidth - 0.5, y * pixelHeight - 0.5, 1, 0]))) 0) | x <- [0..255], y <- [0..255]]
     sequence_ $ map (\(x, y, c) -> GD.setPixel (floor x, floor y) (colorToGDColor c) img) pixels
     GD.savePngFile ("img" ++ show i ++ ".png") img
   where

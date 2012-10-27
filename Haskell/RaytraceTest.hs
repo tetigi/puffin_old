@@ -2,6 +2,13 @@ import Raytrace
 import Test.QuickCheck
 import Control.Applicative
 
+testTolerance = 1e-5
+
+(~=) :: Double -> Double -> Bool
+(~=) target number = 
+  rem <= testTolerance && rem >= -testTolerance
+  where
+    rem = target - number
 
 prop_clamp = undefined
 prop_lerp = undefined
@@ -25,7 +32,7 @@ isZero :: (Num a, Eq a) => Vector a -> Bool
 isZero (Vector vs) = and $ map (==0) vs
 
 prop_vectorNormalize v =
-  not (isZero v) ==> vectorSize (vectorNormalize v) == 1
+  not (isZero v) ==> vectorSize (vectorNormalize v) ~= 1
 
 prop_negVector v@(Vector vs) = 
   negVector (negVector v) == v 
@@ -48,9 +55,10 @@ prop_matrixTranspose m@(Matrix ms) =
   matrixTranspose (matrixTranspose m) == m &&
   (head ms) == ((\(Matrix a) -> map head a) (matrixTranspose m))
 
-prop_matMultVector = undefined
-prop_matMultRay = undefined
-prop_matrixId = undefined
+prop_matrixId n = 
+  n > 0 && n < 100 ==>
+    floor (sum [vectorSize (matrixGetRow i (matrixId n)) | i <- [0..n-1]]) == n
+
 prop_matrixSetTranslate = undefined
 prop_matrixGetTranslate = undefined
 prop_matrixTrimTo = undefined
@@ -58,6 +66,7 @@ prop_matrixAddRow = undefined
 prop_matrixGetRow = undefined
 prop_matrixGetColumn = undefined
 
+{-
 test_Matrix = [ prop_matMultVector
               , prop_matMultRay
               , prop_matrixId
@@ -68,7 +77,7 @@ test_Matrix = [ prop_matMultVector
               , prop_matrixGetRow
               , prop_matrixGetColumn
               ]
-
+-}
 -- --------------------------
 -- Ray
 
