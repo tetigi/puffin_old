@@ -4,11 +4,26 @@ import Control.Applicative
 
 testTolerance = 1e-5
 
-(~=) :: Double -> Double -> Bool
-(~=) target number = 
-  rem <= testTolerance && rem >= -testTolerance
-  where
-    rem = target - number
+class Approximate a where
+  (~=) :: a -> a -> Bool
+
+instance (Fractional a, Approximate a) => Approximate (Matrix a) where
+  (~=) (Matrix m1) (Matrix m2) =
+    and $ concat $ zipWith (zipWith (~=)) m1 m2
+
+instance (Fractional a, Approximate a) => Approximate (Vector a) where
+  (~=) (Vector v1) (Vector v2) = 
+    and $ zipWith (~=) v1 v2
+
+instance Approximate Ray where
+  (~=) (Ray o1 d1) (Ray o2 d2) =
+    o1 ~= o2 && d1 ~= d2
+
+instance Approximate Double where
+  (~=) target number = 
+    rem <= testTolerance && rem >= -testTolerance
+    where
+      rem = target - number
 
 prop_clamp = undefined
 prop_lerp = undefined
@@ -59,19 +74,20 @@ prop_matrixId n =
   n > 0 && n < 100 ==>
     floor (sum [vectorSize (matrixGetRow i (matrixId n)) | i <- [0..n-1]]) == n
 
-prop_matrixSetTranslate = undefined
-prop_matrixGetTranslate = undefined
-prop_matrixTrimTo = undefined
-prop_matrixAddRow = undefined
-prop_matrixGetRow = undefined
-prop_matrixGetColumn = undefined
+prop_matrixGetSetTranslate v m = 
+  matrixTrimTo 3 3 m == matrixTrimTo 3 3 (matrixSetTranslate v m) &&
+  matrixGetTranslate (matrixSetTranslate v m) == v
+
+prop_matrixTrimTo x y m =
+  x > 0 && x <= 4 && y > 0 && y <= 4 ==>
+    (\(Matrix ms) -> length ms) (matrixTrimTo x y m) == y &&
+    (\(Matrix ms) -> length (head ms)) (matrixTrimTo x y m) == x
 
 {-
 test_Matrix = [ prop_matMultVector
               , prop_matMultRay
               , prop_matrixId
-              , prop_matrixSetTranslate
-              , prop_matrixGetTranslate
+              , prop_matrixGetSetTranslate
               , prop_matrixTrimTo
               , prop_matrixAddRow
               , prop_matrixGetRow
@@ -84,9 +100,10 @@ test_Matrix = [ prop_matMultVector
 instance Arbitrary Ray where
   arbitrary = Ray <$> arbitrary <*>  arbitrary
 
-prop_getRayPosition = undefined
+prop_getRayPosition r d =
+  ((getRayPosition r d) + (vectorScale (rayDirection r) (-d))) ~= (rayOrigin r)
 
-test_Ray = [ prop_getRayPosition ]
+--test_Ray = [ prop_getRayPosition ]
 
 -- --------------------------
 -- Sphere
