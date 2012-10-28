@@ -114,7 +114,11 @@ getRayPosition r d = (rayOrigin r) + vectorScale (rayDirection r) d
 -- -------------------------------
 -- Intersection
 
-data Intersection = Intersection { intersectionPosition :: Vector Double, intersectionNormal :: Vector Double, intersectionRayParameter :: Double, intersectionIntersected :: Bool} deriving Eq
+data Intersection = Intersection {  intersectionPosition :: Vector Double,
+                                    intersectionNormal :: Vector Double, 
+                                    intersectionMaterial :: Maybe Material,
+                                    intersectionRayParameter :: Double, 
+                                    intersectionIntersected :: Bool} deriving Eq
 
 class Intersectable a where
   intersect :: Ray -> a -> Intersection
@@ -125,9 +129,13 @@ instance Ord Intersection where
 -- -------------------------------
 -- Object
 
-data Material = Material Int
+data Material = Material { materialColor :: Color } deriving Eq
 
-data Object = forall a. Intersectable a => Object a Material
+data Object = forall a. Intersectable a => Object { objectShape :: a, objectMaterial :: Material }
+
+instance Intersectable Object where
+  intersect ray Object{ objectShape = o, objectMaterial = m } = 
+    (intersect ray o){ intersectionMaterial = Just m }
 
 -- -------------------------------
 -- Sphere
@@ -137,8 +145,8 @@ data Sphere = Sphere { spherePosition :: Vector Double, sphereRadius :: Double }
 instance Intersectable Sphere where
   intersect ray@(Ray origin direction) s@(Sphere position radius) =
     if temp < 0.0 || intersectionRayParameter < 0.0 
-      then Intersection undefined undefined undefined False
-      else Intersection rayPos intersectionNormal intersectionRayParameter True
+      then Intersection undefined undefined undefined undefined False
+      else Intersection rayPos intersectionNormal Nothing intersectionRayParameter True
     where
       p = position - origin
       pDotRayDir = vectorDot p direction
@@ -161,8 +169,8 @@ tolerance = 1e-12
 instance Intersectable Plane where
   intersect  ray@(Ray rayOrigin dir) p@(Plane planeNormal planeDistance) =
     if (d < tolerance && d > -tolerance) || intersectionRayParameter < 0.0
-      then Intersection undefined undefined undefined False
-      else Intersection rayPos planeNormal intersectionRayParameter True
+      then Intersection undefined undefined undefined undefined False
+      else Intersection rayPos planeNormal Nothing intersectionRayParameter True
     where
       d = vectorDot planeNormal dir
       intersectionRayParameter = (planeDistance - vectorDot planeNormal rayOrigin) / d
@@ -182,15 +190,17 @@ data Light = Light { lightPosition :: Vector Double, lightIntensity :: Double }
 -- -------------------------------
 -- Scene
 
-data Scene = Scene { sceneTime :: Double, sceneSpheres :: [Sphere], scenePlanes :: [Plane], sceneLights :: [Light], sceneCamera :: Camera }
+data Scene = Scene { sceneTime :: Double, sceneSpheres :: [Object], scenePlanes :: [Plane], sceneLights :: [Light], sceneCamera :: Camera }
 
 class Sceneable a where
   setSceneAtTime :: Double -> a
+  getTime :: a -> Double
   getCamera :: a -> Camera
   getLights :: a -> [Light]
   getSceneIntersect :: a -> Ray -> Intersection
 
 instance Sceneable Scene where
+  getTime = sceneTime
   setSceneAtTime sceneTime = 
     Scene sceneTime nSpheres nPlanes nLights nCamera
     where
@@ -201,9 +211,9 @@ instance Sceneable Scene where
       h = lerp 1.0 5.0 a
      
       
-      nSpheres  = [Sphere (Vector [0, 1, 20, 1]) 1
-                  ,Sphere (Vector [-d, 1, 20, 1]) 1
-                  ,Sphere (Vector [d, 1, 20, 1]) 1]
+      nSpheres  = [Object (Sphere (Vector [0, 1, 20, 1]) 1) (Material (1, 0, 0, 1))
+                  ,Object (Sphere (Vector [-d, 1, 20, 1]) 1) (Material (0, 1, 0, 1))
+                  ,Object (Sphere (Vector [d, 1, 20, 1]) 1) (Material (0, 0, 1, 1))]
       nPlanes   = [Plane (Vector [0, 1, 0, 0]) 0]
       nLights   = [Light (Vector [0, 4, z, 1]) 15]
       
@@ -215,7 +225,7 @@ instance Sceneable Scene where
   getSceneIntersect s r = 
     if length successful > 0
       then minimum successful
-      else Intersection undefined undefined undefined False
+      else Intersection undefined undefined undefined undefined False
     where
       sphereIntersects = map (intersect r) $ sceneSpheres s
       planeIntersects = map (intersect r) $ scenePlanes s
@@ -242,19 +252,26 @@ trace s r d =
     getLightIntersect :: (Sceneable a) => a -> Intersection -> Light -> Color
     getLightIntersect s i l =
       if not $ intersectionIntersected $ getSceneIntersect s shadowRay
-        then (a, a, a, 1)
+        then (r', g', b', 1)
         else (0, 0, 0, 1)
       where
+        material = intersectionMaterial i
+        (r, g, b, _) = case material of 
+                  Just m  -> materialColor m
+                  Nothing -> (0.5, 0.5, 0.5, 1)
+
         lightDir = lightPosition l - intersectionPosition i
         d = vectorSize lightDir
         attenuation = lightIntensity l / (d * d)
         lightDirNorm = vectorNormalize lightDir
 
         shadowRay = initRay ((intersectionPosition i) + (vectorScale (intersectionNormal i) 0.0001)) lightDirNorm
-        a = attenuation * max 0 (vectorDot lightDirNorm (intersectionNormal i))
+        r' = r * attenuation * max 0 (vectorDot lightDirNorm (intersectionNormal i))
+        g' = g * attenuation * max 0 (vectorDot lightDirNorm (intersectionNormal i))
+        b' = b * attenuation * max 0 (vectorDot lightDirNorm (intersectionNormal i))
 
-renderFrame :: Integer -> IO ()
-renderFrame i =
+renderScene :: Sceneable a => a -> IO ()
+renderScene scene =
   do
     img <- GD.newImage (256, 256)
     GD.fillImage (GD.rgba 255 255 255 20) img
@@ -263,10 +280,8 @@ renderFrame i =
 
     sequence_ $ map (\(x, y, c) -> GD.setPixel (floor x, floor y) (colorToGDColor c) img) pixels
     
-    GD.savePngFile ("img" ++ show i ++ ".png") img
+    GD.savePngFile ("img" ++ show (getTime scene) ++ ".png") img
   where
-    scene :: Scene
-    scene = setSceneAtTime (fromInteger i)
     cam = getCamera scene
     pixelWidth = 1.0/256
     pixelHeight = 1.0/256

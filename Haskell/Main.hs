@@ -1,4 +1,6 @@
 import Raytrace
 
 main = do
-  sequence_ $ map renderFrame [0..9]
+  frames <- return (map setSceneAtTime [0..9] :: [Scene])
+  sequence_ $ map renderScene frames
+  
