@@ -202,9 +202,6 @@ instance Sceneable Scene where
       nPlanes   = [Plane (Vector [0, 1, 0, 0]) 0]
       nLights   = [Light (Vector [0, 4, z, 1]) 15]
       
-      --nSpheres = []
-      --nLights = [Light (Vector [0,4,z,1]) 15]
-      --nPlanes = [Plane (Vector [0,1,0,0]) 0]
       m = matrixSetTranslate (Vector [0, h, 0, 1.0]) $ matrixId 4
       nCamera = Camera m 1 50
 
@@ -256,8 +253,11 @@ renderFrame i =
   do
     img <- GD.newImage (256, 256)
     GD.fillImage (GD.rgba 255 255 255 20) img
+
     pixels <- return [ (x, 256 -1 -y, trace scene (matrixMultRay (cameraTransform cam) (initRay baseVector (Vector [(x * pixelWidth) - 0.5, (y * pixelHeight) - 0.5, 1, 0]))) 0) | x <- [0..255], y <- [0..255]]
+
     sequence_ $ map (\(x, y, c) -> GD.setPixel (floor x, floor y) (colorToGDColor c) img) pixels
+    
     GD.savePngFile ("img" ++ show i ++ ".png") img
   where
     scene :: Scene

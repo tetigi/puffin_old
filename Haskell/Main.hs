@@ -1,4 +1,4 @@
 import Raytrace
 
 main = do
-  renderFrame 0
+  sequence_ $ map renderFrame [0..9]

@@ -25,13 +25,8 @@ instance Approximate Double where
     where
       rem = target - number
 
-prop_clamp = undefined
-prop_lerp = undefined
-
 -- --------------------------
 -- Vector
-
---TODO Check for multiply/dot mixups
 
 instance (Arbitrary a, Num a) => Arbitrary (Vector a) where
   arbitrary = fmap Vector $ vectorOf 4 arbitrary
@@ -113,7 +108,7 @@ instance Arbitrary Sphere where
 
 prop_sphereIntersect = undefined
 
-test_Sphere = [ prop_sphereIntersect ]
+--test_Sphere = [ prop_sphereIntersect ]
 
 -- --------------------------
 -- Plane
