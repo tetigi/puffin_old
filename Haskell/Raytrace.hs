@@ -47,7 +47,7 @@ negVector (Vector v) = Vector $ (map negate (init v)) ++ [last v]
 -- -------------------------------
 -- Matrix
 
-data Matrix a = Matrix [[a]] deriving (Eq, Show)
+newtype Matrix a = Matrix [[a]] deriving (Eq, Show)
 
 instance Num a => Num (Matrix a) where
   Matrix as + Matrix bs = Matrix (zipWith (zipWith (+)) as bs)
