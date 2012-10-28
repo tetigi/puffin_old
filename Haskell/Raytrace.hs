@@ -47,7 +47,7 @@ negVector (Vector v) = Vector $ (map negate (init v)) ++ [last v]
 -- -------------------------------
 -- Matrix
 
-newtype Matrix a = Matrix [[a]] deriving (Eq, Show)
+data Matrix a = Matrix [[a]] deriving (Eq, Show)
 
 instance Num a => Num (Matrix a) where
   Matrix as + Matrix bs = Matrix (zipWith (zipWith (+)) as bs)
@@ -123,6 +123,13 @@ instance Ord Intersection where
   compare i1 i2 = compare (intersectionRayParameter i1) (intersectionRayParameter i2)
 
 -- -------------------------------
+-- Object
+
+data Material = Material Int
+
+data Object = forall a. Intersectable a => Object a Material
+
+-- -------------------------------
 -- Sphere
 
 data Sphere = Sphere { spherePosition :: Vector Double, sphereRadius :: Double }
@@ -144,8 +151,6 @@ instance Intersectable Sphere where
       rayPos = getRayPosition ray intersectionRayParameter
       intersectionNormal = vectorNormalize (rayPos - position)
       
-    
-
 -- -------------------------------
 -- Plane
 
