@@ -1,0 +1,26 @@
+Name:           puffin
+Version:        0.1
+Description:    Simple Haskell raytracer
+License:        GPL
+License-file:   LICENSE
+Author:         Luke Tomlin
+Maintainer:     luke.tomlin@gmail.com
+Build-Type:     Simple
+Cabal-Version:  >=1.2
+
+
+Library
+  Exposed-modules:
+    Puffin.Raytracer.Tracer
+    Puffin.Raytracer.Objects
+    Puffin.Math.Matrix
+  
+  Ghc-Options: -XExistentialQuantification
+
+Executable puffin
+  Main-is:      basicScene.hs
+  Build-depends:
+    base >= 4,
+    gd
+
+  Ghc-Options: -XExistentialQuantification
