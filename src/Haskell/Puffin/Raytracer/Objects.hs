@@ -32,7 +32,24 @@ instance Intersectable Sphere where
 
       rayPos = getRayPosition ray intersectionRayParameter
       intersectionNormal = vectorNormalize (rayPos - position)
-      
+     
+
+-- -------------------------------
+-- Segmented plane
+
+data Disk = Disk { diskCenter :: Vector Double, diskNormal :: Vector Double, diskWidth :: Double }
+
+instance Intersectable Disk where
+  intersect  ray@(Ray origin dir) p@(Disk center normal width) =
+    if (d < tolerance && d > -tolerance) || intersectionRayParameter < 0.0 || distance > width
+      then Intersection undefined undefined undefined undefined False
+      else Intersection rayPos normal Nothing intersectionRayParameter True
+    where
+      d = vectorDot normal dir
+      intersectionRayParameter = ((vectorDot normal center) - (vectorDot normal origin)) / d
+      rayPos = getRayPosition ray intersectionRayParameter
+      distance = vectorSize (rayPos - center)
+
 -- -------------------------------
 -- Plane
 
@@ -41,13 +58,13 @@ data Plane = Plane { planeNormal :: Vector Double, planeDistance :: Double }
 tolerance = 1e-12
 
 instance Intersectable Plane where
-  intersect  ray@(Ray rayOrigin dir) p@(Plane planeNormal planeDistance) =
+  intersect  ray@(Ray origin dir) p@(Plane normal distance) =
     if (d < tolerance && d > -tolerance) || intersectionRayParameter < 0.0
       then Intersection undefined undefined undefined undefined False
-      else Intersection rayPos planeNormal Nothing intersectionRayParameter True
+      else Intersection rayPos normal Nothing intersectionRayParameter True
     where
-      d = vectorDot planeNormal dir
-      intersectionRayParameter = (planeDistance - vectorDot planeNormal rayOrigin) / d
+      d = vectorDot normal dir
+      intersectionRayParameter = ((vectorDot normal (vectorScale normal distance)) - (vectorDot normal origin)) / d
       rayPos = getRayPosition ray intersectionRayParameter
 
 

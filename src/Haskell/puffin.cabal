@@ -1,7 +1,7 @@
 Name:           puffin
 Version:        0.1
 Description:    Simple Haskell raytracer
-License:        GPL
+License:        GPL-3
 License-file:   LICENSE
 Author:         Luke Tomlin
 Maintainer:     luke.tomlin@gmail.com
@@ -15,7 +15,8 @@ Library
     Puffin.Raytracer.Objects
     Puffin.Math.Matrix
   
-  Ghc-Options: -XExistentialQuantification
+  Extensions: ExistentialQuantification
+  Ghc-options: -O
 
 Executable puffin
   Main-is:      basicScene.hs
@@ -23,4 +24,5 @@ Executable puffin
     base >= 4,
     gd
 
-  Ghc-Options: -XExistentialQuantification
+  Extensions: ExistentialQuantification
+  Ghc-options: -O
