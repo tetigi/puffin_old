@@ -4,6 +4,7 @@ import Puffin.Math.Matrix
 import Puffin.Raytracer.Tracer
 import Puffin.Raytracer.Objects
 
+-- | A basic scene consisting of sphere and disks.
 data Scene = Scene { sceneTime :: Double, sceneSpheres :: [Object], sceneDisks :: [Disk], sceneLights :: [Light], sceneCamera :: Camera }
 
 instance Sceneable Scene where
@@ -49,6 +50,6 @@ instance Sceneable Scene where
   getLights = sceneLights
 
 main = do
-  let frames = (map setSceneAtTime [0..9] :: [Scene])
+  let frames = (map setSceneAtTime [9] :: [Scene])
   sequence_ $ map renderScene frames
   

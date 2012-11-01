@@ -1,10 +1,17 @@
-module Puffin.Raytracer.Objects where
+module Puffin.Raytracer.Objects(
+  -- * Types
+  Object(..),
+  Sphere(..),
+  Disk(..),
+  Plane(..)
+  )where
 
 import Puffin.Raytracer.Tracer
 import Puffin.Math.Matrix
 -- -------------------------------
 -- Object
 
+-- | A general data type for any object, consisting of an intersectable shape and a material for the object.
 data Object = forall a. Intersectable a => Object { objectShape :: a, objectMaterial :: Material }
 
 instance Intersectable Object where
@@ -14,6 +21,7 @@ instance Intersectable Object where
 -- -------------------------------
 -- Sphere
 
+-- | A primitive sphere type.
 data Sphere = Sphere { spherePosition :: Vector Double, sphereRadius :: Double }
 
 instance Intersectable Sphere where
@@ -37,6 +45,7 @@ instance Intersectable Sphere where
 -- -------------------------------
 -- Segmented plane
 
+-- | A primitive disk shape.
 data Disk = Disk { diskCenter :: Vector Double, diskNormal :: Vector Double, diskWidth :: Double }
 
 instance Intersectable Disk where
@@ -53,8 +62,10 @@ instance Intersectable Disk where
 -- -------------------------------
 -- Plane
 
+-- | A primitive plane of unlimited size
 data Plane = Plane { planeNormal :: Vector Double, planeDistance :: Double }
 
+-- | Error margin.
 tolerance = 1e-12
 
 instance Intersectable Plane where
