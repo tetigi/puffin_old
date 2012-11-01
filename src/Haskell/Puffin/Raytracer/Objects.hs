@@ -43,7 +43,7 @@ instance Intersectable Disk where
   intersect  ray@(Ray origin dir) p@(Disk center normal width) =
     if (d < tolerance && d > -tolerance) || intersectionRayParameter < 0.0 || distance > width
       then Intersection undefined undefined undefined undefined False
-      else Intersection rayPos normal Nothing intersectionRayParameter True
+      else Intersection rayPos (vectorNormalize normal) Nothing intersectionRayParameter True
     where
       d = vectorDot normal dir
       intersectionRayParameter = ((vectorDot normal center) - (vectorDot normal origin)) / d
@@ -61,7 +61,7 @@ instance Intersectable Plane where
   intersect  ray@(Ray origin dir) p@(Plane normal distance) =
     if (d < tolerance && d > -tolerance) || intersectionRayParameter < 0.0
       then Intersection undefined undefined undefined undefined False
-      else Intersection rayPos normal Nothing intersectionRayParameter True
+      else Intersection rayPos (vectorNormalize normal) Nothing intersectionRayParameter True
     where
       d = vectorDot normal dir
       intersectionRayParameter = ((vectorDot normal (vectorScale normal distance)) - (vectorDot normal origin)) / d

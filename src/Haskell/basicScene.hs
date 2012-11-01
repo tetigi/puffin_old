@@ -18,11 +18,11 @@ instance Sceneable Scene where
       h = lerp 5.0 5.0 a
      
       
-      nSpheres  = [Object (Sphere (Vector [0, 1, 20, 1]) 1) (Material (1, 0, 0, 1))
-                  ,Object (Sphere (Vector [-d, 1, 20, 1]) 1) (Material (0, 1, 0, 1))
-                  ,Object (Sphere (Vector [0, 1, 15, 1]) 1) (Material (0, 1, 0, 1))
-                  ,Object (Sphere (Vector [0, 3, 18, 1]) 1) (Material (0, 1, 0, 1))
-                  ,Object (Sphere (Vector [d, 1, 20, 1]) 1) (Material (0, 0, 1, 1))]
+      nSpheres  = [Object (Sphere (Vector [0, 1, 20, 1]) 1) (Material (Color (1, 0, 0, 1)) 1 0)
+                  ,Object (Sphere (Vector [-d, 1, 20, 1]) 1) (Material (Color (0, 1, 0, 1)) 1 0)
+                  ,Object (Sphere (Vector [0, 1, 15, 1]) 1) (Material (Color (0, 1, 0, 1)) 1 0)
+                  ,Object (Sphere (Vector [0, 3, 18, 1]) 1) (Material (Color (0, 1, 0, 1)) 1 0)
+                  ,Object (Sphere (Vector [d, 1, 20, 1]) 1) (Material (Color (0, 0, 1, 1)) 1 0)]
       nPlanes   = [Disk (Vector [0, 0, 20, 1]) (Vector [0, 1, 0, 0]) 8
                   ,Disk (Vector [0, 0, 23, 1]) (Vector [0, 0, -1, 0]) 5
                    --,Plane (vectorNormalize (Vector [0, 1, -1, 0])) (-15)

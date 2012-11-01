@@ -55,7 +55,7 @@ data Light = Light { lightPosition :: Vector Double, lightIntensity :: Double }
 -- -------------------------------
 -- Material 
 
-data Material = Material { materialColor :: Color } deriving Eq
+data Material = Material { materialColor :: Color, materialReflection :: Double, materialTransparency :: Double } deriving Eq
 
 -- -------------------------------
 -- Scene
@@ -67,32 +67,62 @@ class Sceneable a where
   getLights :: a -> [Light]
   getSceneIntersect :: a -> Ray -> Intersection
 
-type Color = (Double, Double, Double, Double)
+data Color = Color (Double, Double, Double, Double) deriving (Eq, Ord)
+
+instance Num Color where
+  (Color (x1,x2,x3,x4)) + (Color (y1,y2,y3,y4)) = Color (x1+y1,x2+y2,x3+y3,x4+y4)
+  (Color (x1,x2,x3,x4)) * (Color (y1,y2,y3,y4)) = Color (x1*y1,x2*y2,x3*y3,x4*y4)
+  (Color (x1,x2,x3,x4)) - (Color (y1,y2,y3,y4)) = Color (x1-y1,x2-y2,x3-y3,x4-y4)
+  abs c = c
+  signum c = 1
+  fromInteger i = Color (fromInteger i, fromInteger i, fromInteger i, fromInteger i) 
+
+colorScale :: Double -> Color -> Color
+colorScale n (Color (r,g,b,a)) = Color (r*n, g*n, b*n, a)
+
 colorToGDColor :: Color -> GD.Color
-colorToGDColor (r, g, b, a) = 
+colorToGDColor (Color (r, g, b, a)) = 
   GD.rgba (min (floor (255 * r)) 255) (min (floor (255 * g)) 255) (min (floor (255 * b)) 255) (127 - (min (floor (127 * a)) 127))
 
+materialDefault = Material (Color (0.5, 0.5, 0.5, 1)) 0 0
+
 trace :: (Sceneable a) => a -> Ray -> Double -> Color
+trace _ _ 0 = Color (0, 0, 0, 0)
 trace s r d =
   if intersectionIntersected intersection
-    then foldl1 sumColors $ map (getLightIntersect s intersection) $ getLights s
-    else (0, 0, 0, 0)
+    then foldl1 sumColors $ ambient ++ shade ++ reflection -- ++ transparency
+    else Color (0, 0, 0, 0)
   where
-    sumColors :: Color -> Color -> Color
-    sumColors (r1, g1, b1, _) (r2, g2, b2, _) = (r1 + r2, g1 + g2, b1 + b2, 1)
-
     intersection = getSceneIntersect s r
+
+    ambient = [Color (0.1,0.1,0.1,1)]
+    shade   = map (getLightIntersect s intersection) $ getLights s
+    reflection = [colorScale (clamp 0 1 (materialReflection material)) (trace s reflectedRay (d-1))]
+    transparency = [colorScale (clamp 0 1 (materialTransparency material)) (trace s transmittedRay (d-1))]
+
+    material =  case intersectionMaterial intersection of
+                Just m -> m
+                Nothing -> materialDefault
+
+    reflectedRay = 
+      initRay (intersectionPosition intersection) reflectedDir
+    reflectedDir = rayDirection r + vectorScale (intersectionNormal intersection) (2 * (vectorDot (intersectionNormal intersection) (- rayDirection r)))
+    transmittedRay = undefined
+
+    sumColors :: Color -> Color -> Color
+    sumColors (Color (r1, g1, b1, _)) (Color (r2, g2, b2, _)) = Color (r1 + r2, g1 + g2, b1 + b2, 1)
+
     
     getLightIntersect :: (Sceneable a) => a -> Intersection -> Light -> Color
     getLightIntersect s i l =
       if not $ intersectionIntersected $ getSceneIntersect s shadowRay
-        then (r', g', b', 1)
-        else (0, 0, 0, 1)
+        then Color(r', g', b', 1)
+        else Color(0, 0, 0, 1)
       where
         material = intersectionMaterial i
-        (r, g, b, _) = case material of 
+        Color (r, g, b, _) = case material of 
                   Just m  -> materialColor m
-                  Nothing -> (0.5, 0.5, 0.5, 1)
+                  Nothing -> Color (0.5, 0.5, 0.5, 1)
 
         lightDir = lightPosition l - intersectionPosition i
         d = vectorSize lightDir
@@ -107,16 +137,17 @@ trace s r d =
 renderScene :: Sceneable a => a -> IO ()
 renderScene scene =
   do
-    img <- GD.newImage (256, 256)
-    GD.fillImage (GD.rgba 255 255 255 20) img
+    img <- GD.newImage (2048, 2048)
+    GD.fillImage (GD.rgba 2047 2047 2047 20) img
 
-    pixels <- return [ (x, 256 -1 -y, trace scene (matrixMultRay (cameraTransform cam) (initRay baseVector (Vector [(x * pixelWidth) - 0.5, (y * pixelHeight) - 0.5, 1, 0]))) 0) | x <- [0..255], y <- [0..255]]
+    pixels <- return [ (x, 2048 -1 -y, trace scene (matrixMultRay (cameraTransform cam) (initRay baseVector (Vector [(x * pixelWidth) - 0.5, (y * pixelHeight) - 0.5, 1, 0]))) traceDepth) | x <- [0..2047], y <- [0..2047]]
 
     sequence_ $ map (\(x, y, c) -> GD.setPixel (floor x, floor y) (colorToGDColor c) img) pixels
     
     GD.savePngFile ("img" ++ show (getTime scene) ++ ".png") img
   where
+    traceDepth = 4
     cam = getCamera scene
-    pixelWidth = 1.0/256
-    pixelHeight = 1.0/256
+    pixelWidth = 1.0/2048
+    pixelHeight = 1.0/2048
     baseVector = Vector [0, 0, 0, 1]
