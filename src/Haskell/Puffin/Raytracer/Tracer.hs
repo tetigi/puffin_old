@@ -19,6 +19,7 @@ module Puffin.Raytracer.Tracer (
   ) where
 
 import qualified Graphics.GD as GD
+import Data.Vector(Vector)
 import Puffin.Math.Matrix
 
 -- | Clamps a value v to be within the range of a and b.
@@ -190,7 +191,7 @@ renderScene scene =
     img <- GD.newImage (floor width, floor height)
     GD.fillImage (GD.rgba 255 255 255 20) img
 
-    pixels <- return [ (x, height -1 -y, trace scene (matrixMultRay (cameraTransform cam) (initRay baseVector (Vector [(x * pixelWidth) - 0.5, (y * pixelHeight) - 0.5, 1, 0]))) traceDepth) | x <- [0..width-1], y <- [0..height-1]]
+    pixels <- return [ (x, height -1 -y, trace scene (matrixMultRay (cameraTransform cam) (initRay baseVector (listToVector [(x * pixelWidth) - 0.5, (y * pixelHeight) - 0.5, 1, 0]))) traceDepth) | x <- [0..width-1], y <- [0..height-1]]
 
     sequence_ $ map (\(x, y, c) -> GD.setPixel (floor x, floor y) (colorToGDColor c) img) pixels
     
@@ -205,4 +206,4 @@ renderScene scene =
     cam = getCamera scene
     pixelWidth = 1.0/width
     pixelHeight = 1.0/height
-    baseVector = Vector [0, 0, 0, 1]
+    baseVector = listToVector [0, 0, 0, 1]

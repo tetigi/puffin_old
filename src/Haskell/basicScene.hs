@@ -19,21 +19,21 @@ instance Sceneable Scene where
       h = lerp 5.0 5.0 a
      
       
-      nSpheres  = [Object (Sphere (Vector [0, 1, 20, 1]) 1) (Material (Color (1, 0, 0, 1)) 1 0)
-                  ,Object (Sphere (Vector [-d, 1, 20, 1]) 1) (Material (Color (0, 1, 0, 1)) 1 0)
-                  ,Object (Sphere (Vector [0, 1, 15, 1]) 1) (Material (Color (0, 1, 0, 1)) 1 0)
-                  ,Object (Sphere (Vector [0, 3, 18, 1]) 1) (Material (Color (0, 1, 0, 1)) 1 0)
-                  ,Object (Sphere (Vector [d, 1, 20, 1]) 1) (Material (Color (0, 0, 1, 1)) 1 0)]
-      nPlanes   = [Disk (Vector [0, 0, 20, 1]) (Vector [0, 1, 0, 0]) 8
-                  ,Disk (Vector [0, 0, 23, 1]) (Vector [0, 0, -1, 0]) 5
-                   --,Plane (vectorNormalize (Vector [0, 1, -1, 0])) (-15)
+      nSpheres  = [Object (Sphere (listToVector [0, 1, 20, 1]) 1) (Material (Color (1, 0, 0, 1)) 1 0)
+                  ,Object (Sphere (listToVector [-d, 1, 20, 1]) 1) (Material (Color (0, 1, 0, 1)) 1 0)
+                  ,Object (Sphere (listToVector [0, 1, 15, 1]) 1) (Material (Color (0, 1, 0, 1)) 1 0)
+                  ,Object (Sphere (listToVector [0, 3, 18, 1]) 1) (Material (Color (0, 1, 0, 1)) 1 0)
+                  ,Object (Sphere (listToVector [d, 1, 20, 1]) 1) (Material (Color (0, 0, 1, 1)) 1 0)]
+      nPlanes   = [Disk (listToVector [0, 0, 20, 1]) (listToVector [0, 1, 0, 0]) 8
+                  ,Disk (listToVector [0, 0, 23, 1]) (listToVector [0, 0, -1, 0]) 5
+                   --,Plane (vectorNormalize (listToVector [0, 1, -1, 0])) (-15)
                   ]
-      nLights   = [Light (Vector [0, 4, z, 1]) 10
-                  ,Light (Vector [0, 8, 25, 1]) 50
-                  ,Light (Vector [15, 8, 20, 1]) 50
-                  ,Light (Vector [-15, 8, 20, 1]) 50]
+      nLights   = [Light (listToVector [0, 4, z, 1]) 10
+                  ,Light (listToVector [0, 8, 25, 1]) 50
+                  ,Light (listToVector [15, 8, 20, 1]) 50
+                  ,Light (listToVector [-15, 8, 20, 1]) 50]
       
-      m = matrixSetTranslate (Vector [0, h, 0, 1.0]) $ matrixId 4
+      m = matrixSetTranslate (listToVector [0, h, 0, 1.0]) $ matrixId 4
       nCamera = Camera m 1 50
 
   getCamera = sceneCamera

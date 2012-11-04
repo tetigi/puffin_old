@@ -1,6 +1,5 @@
 module Puffin.Math.Matrix(
   -- * Types
-  Vector(..),
   Matrix(..),
   -- * Functions
   vectorDot,
@@ -9,6 +8,7 @@ module Puffin.Math.Matrix(
   vectorNormalize,
   vectorSize,
   negVector,
+  listToVector,
   matrixFromVector,
   matrixToVector,
   matrixTranspose,
@@ -24,109 +24,117 @@ module Puffin.Math.Matrix(
   )where
 
 import Data.List (transpose)
+import qualified Data.Vector as V
 
 -- -------------------------------
 -- Vector
 
--- | A vertical vector of any size.
-newtype Vector a = Vector [a] deriving (Eq, Show)
-instance Num a => Num (Vector a) where
-  Vector as + Vector bs = Vector (zipWith (+) as bs)
-  Vector as - Vector bs = Vector (zipWith (-) as bs)
-  Vector as * Vector bs = Vector (zipWith (*) as bs)
-  negate (Vector as) = Vector (map negate as)
-  fromInteger x = Vector (repeat 0)
+instance Num a => Num (V.Vector a) where
+  (+) = V.zipWith (+)
+  (-) = V.zipWith (-)
+  (*) = V.zipWith (*)
+  negate = V.map negate
+  fromInteger x = V.fromList (repeat 0)
   abs m = m
   signum _ = 1
 
 -- | Dot product on two vectors.
-vectorDot :: (Num a) => Vector a -> Vector a -> a
-vectorDot (Vector v1) (Vector v2) = sum $ zipWith (*) v1 v2
+vectorDot :: (Num a) => V.Vector a -> V.Vector a -> a
+vectorDot v1 v2 = V.sum $ V.zipWith (*) v1 v2
 
 -- | Scales a vector by a scalar.
-vectorScale :: (Num a) => Vector a -> a -> Vector a
-vectorScale (Vector vs) r = Vector (map (r*) vs)
+vectorScale :: (Num a) => V.Vector a -> a -> V.Vector a
+vectorScale v r = V.map (r*) v
 
 -- | Appends a value to the end of a vector.
-vectorAppend :: Vector a -> a -> Vector a
-vectorAppend (Vector v) x = Vector (v ++ [x])
+vectorAppend :: V.Vector a -> a -> V.Vector a
+vectorAppend v x = v V.++ (V.fromList [x])
 
 -- | Normalizes a vectors values, so that the total size is 1.
-vectorNormalize :: (Num a, Fractional a, Floating a) => Vector a -> Vector a
-vectorNormalize v@(Vector vs) = Vector $ map (/ (vectorSize v)) vs
+vectorNormalize :: (Num a, Fractional a, Floating a) => V.Vector a -> V.Vector a
+vectorNormalize v = V.map (/ (vectorSize v)) v
 
 -- | Calculates the size of a vector.
-vectorSize :: (Floating a) => Vector a -> a
-vectorSize (Vector v) = sqrt . sum $ map (^2) v
+vectorSize :: (Floating a) => V.Vector a -> a
+vectorSize v = sqrt . V.sum $ V.map (^2) v
 
 -- | Negates a 4 length vector, graphics styleeeee
-negVector :: (Num a) => Vector a -> Vector a
-negVector (Vector v) = Vector $ (map negate (init v)) ++ [last v]
+negVector :: (Num a) => V.Vector a -> V.Vector a
+negVector v = (V.map negate (V.init v)) V.++ (V.fromList [V.last v])
+
+listToVector :: [a] -> V.Vector a
+listToVector = V.fromList
 
 -- -------------------------------
--- Matrix
+-- Matrix TODO Convert to vector of vectors
 
--- | A matrix of any size.
-newtype Matrix a = Matrix [[a]] deriving (Eq, Show)
+newtype Matrix a = Matrix (V.Vector (V.Vector a)) deriving (Eq, Show)
 
 instance Num a => Num (Matrix a) where
-  Matrix as + Matrix bs = Matrix (zipWith (zipWith (+)) as bs)
-  Matrix as - Matrix bs = Matrix (zipWith (zipWith (-)) as bs)
-  Matrix as * Matrix bs =
-    Matrix [[sum $ zipWith (*) a b | b <- transpose bs] | a <- as]
-  negate (Matrix as) = Matrix (map (map negate) as)
-  fromInteger x = Matrix (iterate (0:) (fromInteger x : repeat 0))
+  (Matrix m1) + (Matrix m2) = Matrix (V.zipWith (V.zipWith (+)) m1 m2)
+  (Matrix m1) - (Matrix m2) = Matrix (V.zipWith (V.zipWith (-)) m1 m2)
+  (Matrix m1) * (Matrix m2) =
+    listToMatrix [[sum $ zipWith (*) a b | b <- transpose bs] | a <- as]
+    where 
+      as = matrixToList (Matrix m1)
+      bs = matrixToList (Matrix m2)
+  negate (Matrix m) = Matrix $ V.map (V.map negate) m
+  fromInteger x = listToMatrix (iterate (0:) (fromInteger x : repeat 0))
   abs m = m
   signum _ = 1
 
 -- | Converts a vector of size n into a [nx1] size matrix.
-matrixFromVector :: Vector a -> Matrix a
-matrixFromVector (Vector v) = Matrix [[m] | m <- v]
+matrixFromVector :: V.Vector a -> Matrix a
+matrixFromVector v = Matrix $ V.singleton v
 
 -- | Chops a matrix into a single vector of the first column.
-matrixToVector :: Matrix a -> Vector a
-matrixToVector (Matrix ms) = Vector (map head ms)
+matrixToVector :: Matrix a -> V.Vector a
+matrixToVector (Matrix m) = V.head m
 
 -- | Transposes a given matrix.
 matrixTranspose :: Matrix a -> Matrix a
-matrixTranspose (Matrix as) = Matrix (transpose as)
+matrixTranspose = listToMatrix . transpose . matrixToList
+
+-- | Converts a matrix to a list of lists
+matrixToList :: Matrix a -> [[a]]
+matrixToList (Matrix m) = V.toList $ V.map V.toList m
+
+-- | Converts a list of lists into a matrix
+listToMatrix :: [[a]] -> Matrix a
+listToMatrix = Matrix . V.fromList . map V.fromList
 
 -- | Multiples a matrix by a vector.
-matrixMultVector :: (Num a) => Matrix a -> Vector a -> Vector a
+matrixMultVector :: (Num a) => Matrix a -> V.Vector a -> V.Vector a
 matrixMultVector m v = matrixToVector $ m * (matrixFromVector v)
 
 -- | Creates a square identity matrix of size [nxn].
 matrixId :: Int -> Matrix Double
-matrixId n = Matrix [replicate i 0 ++ [1] ++ replicate (n-i-1) 0 | i <- [0..n-1]]
+matrixId n =  listToMatrix [replicate i 0 ++ [1] ++ replicate (n-i-1) 0 | i <- [0..n-1]]
 
 -- | Sets the fourth column of a graphics matrix.
-matrixSetTranslate :: (Num a) => Vector a -> Matrix a -> Matrix a
-matrixSetTranslate v m = matrixAddColumn v $ matrixAddRow oldScale $ matrixTrimTo 3 3 m
-  where oldScale = matrixGetRow 3 $ matrixTrimTo 3 4 m
+matrixSetTranslate :: (Num a) => V.Vector a -> Matrix a -> Matrix a
+matrixSetTranslate v m = matrixAddColumn v $ matrixTrimTo 3 4 m
 
 -- | Gets the fourth column of a graphics matrix.
-matrixGetTranslate :: (Num a) => Matrix a -> Vector a
+matrixGetTranslate :: (Num a) => Matrix a -> V.Vector a
 matrixGetTranslate = matrixGetColumn 3
 
 -- | Trim a matrix of any size to be of size [xxy].
 matrixTrimTo :: Int -> Int -> Matrix a -> Matrix a
-matrixTrimTo x y (Matrix as) = Matrix $ map (take x) $ take y as 
+matrixTrimTo x y (Matrix m) = Matrix $ V.map (V.take y) $ V.take x m
 
 -- | Appends a new row to the end of a matrix.
-matrixAddRow :: Vector a -> Matrix a -> Matrix a
-matrixAddRow (Vector v) (Matrix as) = Matrix (as ++ [v])
+matrixAddRow :: V.Vector a -> Matrix a -> Matrix a
+matrixAddRow v m = matrixTranspose $ matrixAddColumn v $ matrixTranspose m
 
 -- | Appends a new column to the end of a matrix.
-matrixAddColumn :: Vector a -> Matrix a -> Matrix a
-matrixAddColumn v m = matrixTranspose $ matrixAddRow v $ matrixTranspose m
+matrixAddColumn :: V.Vector a -> Matrix a -> Matrix a
+matrixAddColumn v (Matrix m) = Matrix $ m V.++ (V.fromList [v])
 
 -- | Gets a specific row from a matrix.
-matrixGetRow :: Int -> Matrix a -> Vector a
-matrixGetRow i (Matrix as) = Vector (as !! i)
+matrixGetRow :: Int -> Matrix a -> V.Vector a
+matrixGetRow i m = matrixGetColumn i $ matrixTranspose m
 
 -- | Gets a specific column from a matrix.
-matrixGetColumn :: Int -> Matrix a -> Vector a
-matrixGetColumn i m = matrixGetRow i $ matrixTranspose m
-
-
-
+matrixGetColumn :: Int -> Matrix a -> V.Vector a
+matrixGetColumn i (Matrix m) = m V.! i

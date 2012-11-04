@@ -1,0 +1,214 @@
+	Sat Nov  3 21:57 2012 Time and Allocation Profiling Report  (Final)
+
+	   puffin +RTS -p -RTS
+
+	total time  =       19.25 secs   (19251 ticks @ 1000 us, 1 processor)
+	total alloc = 25,277,132,160 bytes  (excludes profiling overheads)
+
+COST CENTRE                        MODULE                   %time %alloc
+
+vectorDot                          Puffin.Math.Matrix        33.3   42.2
+-                                  Puffin.Math.Matrix        11.9   16.3
+vectorSize                         Puffin.Math.Matrix        10.1    8.2
+*                                  Puffin.Math.Matrix         7.5    8.7
+vectorNormalize                    Puffin.Math.Matrix         5.5    4.8
+intersect                          Puffin.Raytracer.Objects   3.9    2.8
+intersect                          Puffin.Raytracer.Objects   2.7    0.2
++                                  Puffin.Math.Matrix         2.4    3.3
+vectorScale                        Puffin.Math.Matrix         2.2    2.9
+getSceneIntersect.planeIntersects  Main                       2.1    1.5
+trace.getLightIntersect            Puffin.Raytracer.Tracer    2.0    1.0
+getSceneIntersect.sphereIntersects Main                       1.9    2.3
+getSceneIntersect.successful       Main                       1.8    0.4
+trace                              Puffin.Raytracer.Tracer    1.5    1.1
+intersect                          Puffin.Raytracer.Objects   1.5    0.3
+getSceneIntersect                  Main                       1.0    0.3
+
+
+                                                                                                  individual     inherited
+COST CENTRE                                  MODULE                             no.     entries  %time %alloc   %time %alloc
+
+MAIN                                         MAIN                                50           0    0.0    0.0   100.0  100.0
+ main                                        Main                               101           0    0.0    0.0   100.0  100.0
+  renderScene                                Puffin.Raytracer.Tracer            104           0    0.8    0.4   100.0  100.0
+   trace.ambient                             Puffin.Raytracer.Tracer            183       59001    0.0    0.0     0.0    0.0
+   initRay                                   Puffin.Raytracer.Tracer            145      262144    0.0    0.0     1.6    1.1
+    vectorNormalize                          Puffin.Math.Matrix                 150      262144    0.7    0.5     1.6    1.1
+     vectorSize                              Puffin.Math.Matrix                 152      262144    0.9    0.5     0.9    0.5
+   renderScene.cam                           Puffin.Raytracer.Tracer            128           1    0.0    0.0     0.0    0.0
+   matrixMultRay                             Puffin.Raytracer.Tracer            120      262144    0.2    0.0     9.0   10.3
+    matrixMultVector                         Puffin.Math.Matrix                 126      524288    0.3    0.1     8.8   10.2
+     matrixFromVector                        Puffin.Math.Matrix                 144      524288    0.4    0.6     0.4    0.6
+     matrixToVector                          Puffin.Math.Matrix                 141      524288    0.6    0.7     0.6    0.7
+     *                                       Puffin.Math.Matrix                 127      524288    7.5    8.7     7.5    8.7
+   trace                                     Puffin.Raytracer.Tracer            112      475991    1.5    1.1    87.8   88.2
+    trace.material                           Puffin.Raytracer.Tracer            254      213847    0.0    0.0     0.0    0.0
+    trace.reflectedDir                       Puffin.Raytracer.Tracer            237      162500    0.2    0.1     1.3    1.2
+     negate                                  Puffin.Math.Matrix                 241      162500    0.2    0.3     0.2    0.3
+     vectorDot                               Puffin.Math.Matrix                 240      162500    0.4    0.3     0.4    0.3
+     vectorScale                             Puffin.Math.Matrix                 239      162500    0.3    0.3     0.3    0.3
+     +                                       Puffin.Math.Matrix                 238      162500    0.3    0.3     0.3    0.3
+    trace.reflectedRay                       Puffin.Raytracer.Tracer            234      162500    0.0    0.0     0.9    0.7
+     initRay                                 Puffin.Raytracer.Tracer            235      162500    0.0    0.0     0.9    0.7
+      vectorNormalize                        Puffin.Math.Matrix                 236      162500    0.4    0.3     0.9    0.7
+       vectorSize                            Puffin.Math.Matrix                 242      162500    0.5    0.3     0.5    0.3
+    trace.reflection                         Puffin.Raytracer.Tracer            233      213847    0.3    0.1     0.5    0.2
+     clamp                                   Puffin.Raytracer.Tracer            253      213847    0.0    0.0     0.0    0.0
+     colorScale                              Puffin.Raytracer.Tracer            244      213847    0.1    0.0     0.1    0.0
+     trace.ambient                           Puffin.Raytracer.Tracer            243      154846    0.0    0.0     0.0    0.0
+    trace.sumColors                          Puffin.Raytracer.Tracer            187     1069235    0.6    0.2     0.6    0.2
+    trace.shade                              Puffin.Raytracer.Tracer            184      213847    0.6    0.4    57.4   59.0
+     trace.getLightIntersect                 Puffin.Raytracer.Tracer            188      855388    2.0    1.0    56.8   58.6
+      trace.getLightIntersect.b              Puffin.Raytracer.Tracer            260      206797    0.0    0.0     0.0    0.0
+      trace.getLightIntersect.b'             Puffin.Raytracer.Tracer            259      534676    0.2    0.0     0.9    1.0
+       vectorDot                             Puffin.Math.Matrix                 261      534676    0.8    1.0     0.8    1.0
+      trace.getLightIntersect.g              Puffin.Raytracer.Tracer            257      206797    0.0    0.0     0.0    0.0
+      trace.getLightIntersect.g'             Puffin.Raytracer.Tracer            256      534676    0.1    0.0     0.8    1.0
+       vectorDot                             Puffin.Math.Matrix                 258      534676    0.7    1.0     0.7    1.0
+      trace.getLightIntersect.attenuation    Puffin.Raytracer.Tracer            251      534676    0.1    0.0     0.1    0.0
+      trace.getLightIntersect.d              Puffin.Raytracer.Tracer            249      534676    0.0    0.0     1.1    1.0
+       vectorSize                            Puffin.Math.Matrix                 250      534676    1.1    1.0     1.1    1.0
+      trace.getLightIntersect.material       Puffin.Raytracer.Tracer            248      206797    0.0    0.0     0.0    0.0
+      trace.getLightIntersect.(...)          Puffin.Raytracer.Tracer            247      206797    0.0    0.0     0.0    0.0
+      trace.getLightIntersect.r              Puffin.Raytracer.Tracer            246      206797    0.0    0.0     0.0    0.0
+      trace.getLightIntersect.r'             Puffin.Raytracer.Tracer            245      534676    0.1    0.0     0.9    1.0
+       vectorDot                             Puffin.Math.Matrix                 252      534676    0.8    1.0     0.8    1.0
+      trace.getLightIntersect.lightDir       Puffin.Raytracer.Tracer            208      855388    0.1    0.0     1.5    1.6
+       -                                     Puffin.Math.Matrix                 209      855388    1.4    1.6     1.4    1.6
+      trace.getLightIntersect.lightDirNorm   Puffin.Raytracer.Tracer            206      855388    0.0    0.0     4.0    3.4
+       vectorNormalize                       Puffin.Math.Matrix                 207      855388    1.9    1.8     4.0    3.4
+        vectorSize                           Puffin.Math.Matrix                 211      855388    2.1    1.7     2.1    1.7
+      trace.getLightIntersect.shadowRay      Puffin.Raytracer.Tracer            193      855388    0.3    0.2     4.8    4.4
+       vectorScale                           Puffin.Math.Matrix                 201      213847    0.3    0.4     0.3    0.4
+       +                                     Puffin.Math.Matrix                 200      213847    0.3    0.4     0.3    0.4
+       initRay                               Puffin.Raytracer.Tracer            194      855388    0.1    0.0     3.9    3.4
+        vectorNormalize                      Puffin.Math.Matrix                 205      855388    1.9    1.8     3.8    3.4
+         vectorSize                          Puffin.Math.Matrix                 215      855388    1.9    1.7     1.9    1.7
+      getSceneIntersect                      Main                               189      855388    0.5    0.2    40.5   44.0
+       compare                               Puffin.Raytracer.Tracer            262       53949    0.0    0.0     0.0    0.0
+       getSceneIntersect.planeIntersects     Main                               219      855388    1.4    1.0    14.9   15.7
+        intersect                            Puffin.Raytracer.Objects           220     1710776    0.8    0.1    13.6   14.7
+         intersect.rayPos                    Puffin.Raytracer.Objects           227      635425    0.0    0.0     1.9    2.4
+          getRayPosition                     Puffin.Raytracer.Tracer            228      635425    0.2    0.1     1.9    2.4
+           vectorScale                       Puffin.Math.Matrix                 230      635425    0.9    1.1     0.9    1.1
+           +                                 Puffin.Math.Matrix                 229      635425    0.9    1.2     0.9    1.2
+         intersect.distance                  Puffin.Raytracer.Objects           225      635425    0.2    0.0     2.5    2.5
+          vectorSize                         Puffin.Math.Matrix                 231      635425    1.5    1.2     1.5    1.2
+          -                                  Puffin.Math.Matrix                 226      635425    0.8    1.2     0.8    1.2
+         intersect.intersectionRayParameter  Puffin.Raytracer.Objects           223     1708232    0.2    0.0     5.7    6.5
+          vectorDot                          Puffin.Math.Matrix                 224     3416464    5.5    6.5     5.5    6.5
+         intersect.d                         Puffin.Raytracer.Objects           221     1710776    0.1    0.0     2.6    3.2
+          vectorDot                          Puffin.Math.Matrix                 222     1710776    2.6    3.2     2.6    3.2
+       getSceneIntersect.successful          Main                               191      855388    1.2    0.2     1.2    0.2
+       getSceneIntersect.sphereIntersects    Main                               190      855388    1.2    1.5    23.8   28.0
+        intersect                            Puffin.Raytracer.Objects           192     4276940    2.5    1.9    22.6   26.4
+         intersect.radiusSq                  Puffin.Raytracer.Objects           197     4276940    0.0    0.0     0.0    0.0
+         intersect.temp                      Puffin.Raytracer.Objects           196     4276940    0.0    0.0     0.0    0.0
+         intersect                           Puffin.Raytracer.Objects           195     4276940    1.8    0.2    20.1   24.5
+          intersect.intersectionRayParameter Puffin.Raytracer.Objects           232      318628    0.0    0.0     0.0    0.0
+          intersect.radiusSq                 Puffin.Raytracer.Objects           218           0    0.0    0.0     0.0    0.0
+          intersect.temp                     Puffin.Raytracer.Objects           216           0    0.2    0.0     5.9    8.1
+           vectorDot                         Puffin.Math.Matrix                 217     4276940    5.7    8.1     5.7    8.1
+          intersect.pDotRayDir               Puffin.Raytracer.Objects           203     4276940    0.2    0.0     6.6    8.1
+           vectorDot                         Puffin.Math.Matrix                 204     4276940    6.4    8.1     6.4    8.1
+          intersect.p                        Puffin.Raytracer.Objects           198     4276940    0.1    0.0     5.8    8.1
+           -                                 Puffin.Math.Matrix                 199     4276940    5.7    8.1     5.7    8.1
+    trace.intersection                       Puffin.Raytracer.Tracer            113      424644    0.2    0.1    25.6   25.9
+     getSceneIntersect                       Main                               115      424644    0.5    0.1    25.4   25.8
+      compare                                Puffin.Raytracer.Tracer            263      105627    0.0    0.0     0.0    0.0
+      getSceneIntersect.planeIntersects      Main                               167      424644    0.8    0.5    11.5   11.6
+       intersect                             Puffin.Raytracer.Objects           169      849288    0.6    0.2    10.8   11.1
+        vectorNormalize                      Puffin.Math.Matrix                 202      201084    0.6    0.4     1.2    0.8
+         vectorSize                          Puffin.Math.Matrix                 210      201084    0.6    0.4     0.6    0.4
+        intersect.rayPos                     Puffin.Raytracer.Objects           178      695038    0.0    0.0     1.9    2.6
+         getRayPosition                      Puffin.Raytracer.Tracer            179      695038    0.1    0.1     1.9    2.6
+          vectorScale                        Puffin.Math.Matrix                 181      695038    0.8    1.2     0.8    1.2
+          +                                  Puffin.Math.Matrix                 180      695038    0.9    1.3     0.9    1.3
+        intersect.distance                   Puffin.Raytracer.Objects           176      695038    0.1    0.0     2.5    2.7
+         vectorSize                          Puffin.Math.Matrix                 182      695038    1.4    1.4     1.4    1.4
+         -                                   Puffin.Math.Matrix                 177      695038    1.0    1.3     1.0    1.3
+        intersect.intersectionRayParameter   Puffin.Raytracer.Objects           174      848773    0.2    0.0     3.0    3.2
+         vectorDot                           Puffin.Math.Matrix                 175     1697546    2.8    3.2     2.8    3.2
+        intersect.d                          Puffin.Raytracer.Objects           170      849288    0.0    0.0     1.6    1.6
+         vectorDot                           Puffin.Math.Matrix                 171      849288    1.5    1.6     1.5    1.6
+      getSceneIntersect.successful           Main                               118      424644    0.7    0.1     0.7    0.1
+      getSceneIntersect.sphereIntersects     Main                               116      424644    0.7    0.8    12.7   13.9
+       intersect                             Puffin.Raytracer.Objects           119     2123220    1.4    0.9    11.9   13.2
+        intersect.radiusSq                   Puffin.Raytracer.Objects           123     2123220    0.0    0.0     0.0    0.0
+        intersect.temp                       Puffin.Raytracer.Objects           122     2123220    0.0    0.0     0.0    0.0
+        intersect                            Puffin.Raytracer.Objects           121     2123220    0.9    0.0    10.5   12.2
+         intersect.intersectionNormal        Puffin.Raytracer.Objects           269       12763    0.0    0.0     0.1    0.1
+          vectorNormalize                    Puffin.Math.Matrix                 271       12763    0.0    0.0     0.1    0.1
+           vectorSize                        Puffin.Math.Matrix                 272       12763    0.0    0.0     0.0    0.0
+          -                                  Puffin.Math.Matrix                 270       12763    0.0    0.0     0.0    0.0
+         intersect.rayPos                    Puffin.Raytracer.Objects           265       12763    0.0    0.0     0.0    0.0
+          getRayPosition                     Puffin.Raytracer.Tracer            266       12763    0.0    0.0     0.0    0.0
+           vectorScale                       Puffin.Math.Matrix                 268       12763    0.0    0.0     0.0    0.0
+           +                                 Puffin.Math.Matrix                 267       12763    0.0    0.0     0.0    0.0
+         intersect.intersectionRayParameter  Puffin.Raytracer.Objects           264       51667    0.0    0.0     0.0    0.0
+         intersect.radiusSq                  Puffin.Raytracer.Objects           163           0    0.0    0.0     0.0    0.0
+         intersect.temp                      Puffin.Raytracer.Objects           161           0    0.2    0.0     3.0    4.0
+          vectorDot                          Puffin.Math.Matrix                 162     2123220    2.8    4.0     2.8    4.0
+         intersect.pDotRayDir                Puffin.Raytracer.Objects           142     2123220    0.1    0.0     3.5    4.0
+          vectorDot                          Puffin.Math.Matrix                 143     2123220    3.4    4.0     3.4    4.0
+         intersect.p                         Puffin.Raytracer.Objects           124     2123220    0.1    0.0     3.0    4.0
+          -                                  Puffin.Math.Matrix                 125     2123220    3.0    4.0     3.0    4.0
+   renderScene.\                             Puffin.Raytracer.Tracer            109      262144    0.6    0.0     0.8    0.0
+    colorToGDColor                           Puffin.Raytracer.Tracer            110      262144    0.2    0.0     0.2    0.0
+ CAF                                         Main                                99           0    0.0    0.0     0.0    0.0
+  getTime                                    Main                               273           1    0.0    0.0     0.0    0.0
+  getLights                                  Main                               185           1    0.0    0.0     0.0    0.0
+  setSceneAtTime                             Main                               134           0    0.0    0.0     0.0    0.0
+   setSceneAtTime.m                          Main                               135           0    0.0    0.0     0.0    0.0
+    matrixId                                 Puffin.Math.Matrix                 136           1    0.0    0.0     0.0    0.0
+  getCamera                                  Main                               129           1    0.0    0.0     0.0    0.0
+  main                                       Main                               100           1    0.0    0.0     0.0    0.0
+   renderScene                               Puffin.Raytracer.Tracer            103           1    0.0    0.0     0.0    0.0
+   main.frames                               Main                               102           1    0.0    0.0     0.0    0.0
+    setSceneAtTime                           Main                               114           1    0.0    0.0     0.0    0.0
+     setSceneAtTime.z                        Main                               212           1    0.0    0.0     0.0    0.0
+      lerp                                   Puffin.Raytracer.Tracer            213           1    0.0    0.0     0.0    0.0
+       clamp                                 Puffin.Raytracer.Tracer            214           2    0.0    0.0     0.0    0.0
+     setSceneAtTime.nLights                  Main                               186           1    0.0    0.0     0.0    0.0
+     setSceneAtTime.nPlanes                  Main                               168           1    0.0    0.0     0.0    0.0
+     setSceneAtTime.d                        Main                               164           1    0.0    0.0     0.0    0.0
+      lerp                                   Puffin.Raytracer.Tracer            165           1    0.0    0.0     0.0    0.0
+       clamp                                 Puffin.Raytracer.Tracer            166           2    0.0    0.0     0.0    0.0
+     setSceneAtTime.a                        Main                               160           1    0.0    0.0     0.0    0.0
+     setSceneAtTime.nTime                    Main                               158           1    0.0    0.0     0.0    0.0
+     clamp                                   Puffin.Raytracer.Tracer            157           1    0.0    0.0     0.0    0.0
+     setSceneAtTime.h                        Main                               154           1    0.0    0.0     0.0    0.0
+      lerp                                   Puffin.Raytracer.Tracer            155           1    0.0    0.0     0.0    0.0
+       clamp                                 Puffin.Raytracer.Tracer            156           2    0.0    0.0     0.0    0.0
+     setSceneAtTime.m                        Main                               131           1    0.0    0.0     0.0    0.0
+      matrixSetTranslate                     Puffin.Math.Matrix                 132           1    0.0    0.0     0.0    0.0
+       matrixSetTranslate.oldScale           Puffin.Math.Matrix                 147           1    0.0    0.0     0.0    0.0
+        matrixGetRow                         Puffin.Math.Matrix                 149           1    0.0    0.0     0.0    0.0
+        matrixTrimTo                         Puffin.Math.Matrix                 148           1    0.0    0.0     0.0    0.0
+       matrixAddColumn                       Puffin.Math.Matrix                 138           1    0.0    0.0     0.0    0.0
+        matrixAddRow                         Puffin.Math.Matrix                 140           1    0.0    0.0     0.0    0.0
+        matrixTranspose                      Puffin.Math.Matrix                 139           2    0.0    0.0     0.0    0.0
+       matrixAddRow                          Puffin.Math.Matrix                 137           1    0.0    0.0     0.0    0.0
+       matrixTrimTo                          Puffin.Math.Matrix                 133           1    0.0    0.0     0.0    0.0
+     setSceneAtTime.nCamera                  Main                               130           1    0.0    0.0     0.0    0.0
+     setSceneAtTime.nSpheres                 Main                               117           1    0.0    0.0     0.0    0.0
+ CAF                                         Puffin.Raytracer.Tracer             97           0    0.0    0.0     0.0    0.0
+  materialDefault                            Puffin.Raytracer.Tracer            255           1    0.0    0.0     0.0    0.0
+  renderScene                                Puffin.Raytracer.Tracer            105           0    0.0    0.0     0.0    0.0
+   renderScene.pixelHeight                   Puffin.Raytracer.Tracer            153           1    0.0    0.0     0.0    0.0
+   renderScene.pixelWidth                    Puffin.Raytracer.Tracer            151           1    0.0    0.0     0.0    0.0
+   renderScene.baseVector                    Puffin.Raytracer.Tracer            146           1    0.0    0.0     0.0    0.0
+   renderScene.traceDepth                    Puffin.Raytracer.Tracer            111           1    0.0    0.0     0.0    0.0
+   renderScene.height                        Puffin.Raytracer.Tracer            108           1    0.0    0.0     0.0    0.0
+   renderScene.(...)                         Puffin.Raytracer.Tracer            107           1    0.0    0.0     0.0    0.0
+   renderScene.width                         Puffin.Raytracer.Tracer            106           1    0.0    0.0     0.0    0.0
+ CAF                                         Puffin.Raytracer.Objects            96           0    0.0    0.0     0.0    0.0
+  intersect                                  Puffin.Raytracer.Objects           173           0    0.0    0.0     0.0    0.0
+  tolerance                                  Puffin.Raytracer.Objects           172           1    0.0    0.0     0.0    0.0
+ CAF                                         Graphics.GD                         95           0    0.0    0.0     0.0    0.0
+ CAF                                         GHC.IO.Encoding                     92           0    0.0    0.0     0.0    0.0
+ CAF                                         GHC.Float                           87           0    0.0    0.0     0.0    0.0
+ CAF                                         GHC.Conc.Signal                     84           0    0.0    0.0     0.0    0.0
+ CAF                                         GHC.IO.Encoding.Iconv               81           0    0.0    0.0     0.0    0.0
+ CAF                                         GHC.IO.Handle.FD                    78           0    0.0    0.0     0.0    0.0
+ CAF                                         GHC.Integer.Logarithms.Internals    58           0    0.0    0.0     0.0    0.0

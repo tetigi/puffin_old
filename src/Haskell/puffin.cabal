@@ -16,13 +16,14 @@ Library
     Puffin.Math.Matrix
   
   Extensions: ExistentialQuantification
-  Ghc-options: -O
+  Ghc-options: -O -prof -fprof-auto
 
 Executable puffin
   Main-is:      basicScene.hs
   Build-depends:
     base >= 4,
-    gd
+    gd,
+    vector
 
   Extensions: ExistentialQuantification
-  Ghc-options: -O
+  Ghc-options: -O -prof -fprof-auto

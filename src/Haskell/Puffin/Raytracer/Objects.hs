@@ -7,6 +7,7 @@ module Puffin.Raytracer.Objects(
   )where
 
 import Puffin.Raytracer.Tracer
+import Data.Vector(Vector)
 import Puffin.Math.Matrix
 -- -------------------------------
 -- Object
